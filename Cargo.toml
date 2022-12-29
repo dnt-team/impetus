@@ -1,0 +1,11 @@
+[workspace]
+members = [
+	"node",
+	"frontier/client/*",
+	"frontier/frame/*",
+	"frontier/primitives/*",
+	"frontier/precompiles/*",
+	"pallets/*",
+	"runtime",
+	"primitives",
+]
