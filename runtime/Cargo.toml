@@ -60,11 +60,13 @@ pallet-evm-precompile-modexp = { path = "../frontier/frame/evm/precompile/modexp
 pallet-evm-precompile-sha3fips = { path = "../frontier/frame/evm/precompile/sha3fips", default-features = false }
 pallet-evm-precompile-simple = { path = "../frontier/frame/evm/precompile/simple", default-features = false }
 pallet-hotfix-sufficients = { path = "../frontier/frame/hotfix-sufficients", default-features = false }
-
+# Extra
 pallet-assets = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
 pallet-betting = { path = "../pallets/betting", default-features = false }
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
 primitives = {  path = "../primitives", default-features = false }
+#Precompiles
+pallet-evm-precompile-betting = { path = "../precompiles/betting", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
