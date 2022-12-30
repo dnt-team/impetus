@@ -42,4 +42,4 @@ sp-consensus = { version = "0.10.0-dev", git = "https://github.com/paritytech/su
 sp-io = { version = "7.0.0", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 substrate-test-runtime-client = { version = "2.0.0", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 # Frontier
-frontier-template-runtime = { path = "../../../runtime" }
+frontier-template-runtime = { path = "../../../runtime/impetus" }

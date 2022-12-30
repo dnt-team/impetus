@@ -1,4 +1,6 @@
 import { ethers } from "hardhat";
+// @ts-ignore
+// Get this file from build
 import { abi } from "../artifacts/contracts/BettingInterface.sol/Betting.json";
 async function main() {
 	const address = "0x0000000000000000000000000000000000000803";

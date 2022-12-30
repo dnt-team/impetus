@@ -70,7 +70,7 @@ fp-evm = { path = "../frontier/primitives/evm" }
 fp-rpc = { path = "../frontier/primitives/rpc" }
 fp-storage = { path = "../frontier/primitives/storage" }
 
-frontier-template-runtime = { path = "../runtime", default-features = false, features = ["std"] }
+frontier-template-runtime = { path = "../runtime/impetus", default-features = false, features = ["std"] }
 
 #Extra
 primitives = { path = "../primitives" }
