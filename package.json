@@ -1,15 +1,16 @@
 {
-    "name": "frontier-template-node",
+    "name": "impetus",
+    "private": true,
     "version": "1.0.0",
+    "workspaces": ["blockchain", "hardhat"],
     "scripts": {
-      "build": "cargo build --release",
-      "build:test:evm": "cargo build --release --no-default-features --features manual-seal,rpc_binary_search_estimate",
-      "start": "target/release/frontier-template-node --dev --tmp",
-      "start:debug": "RUST_LOG=runtime=debug target/release/frontier-template-node --dev --tmp --rpc-external --ws-external",
-      "test:evm": "cd ts-tests && yarn test"
-    },
-    "devDependencies": {
-      "hardhat": "^2.12.0"
+      "blockchain:build": "yarn workspace blockchain build",
+      "blockchain": "yarn workspace blockchain start",
+      "blockchain:debug": "yarn workspace blockchain start:debug",
+      "blockchain:test:evm": "yarn workspace blockchain test:evm",
+      "hardhat:test": "yarn workspace hardhat test",
+      "hardhat:coverage": "yarn workspace hardhat coverage",
+      "hardhat:test:local": "yarn workspace hardhat test:local"
     }
   }
   

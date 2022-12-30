@@ -1,5 +1,5 @@
 [package]
-name = "frontier-template-runtime"
+name = "impetus-runtime"
 version = "0.0.0"
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
 edition = "2021"
@@ -48,25 +48,25 @@ frame-benchmarking = { version = "4.0.0-dev", git = "https://github.com/parityte
 frame-system-benchmarking = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false, optional = true }
 
 # Frontier
-fp-rpc = { path = "../frontier/primitives/rpc", default-features = false }
-fp-self-contained = { path = "../frontier/primitives/self-contained", default-features = false }
+fp-rpc = { path = "../../frontier/primitives/rpc", default-features = false }
+fp-self-contained = { path = "../../frontier/primitives/self-contained", default-features = false }
 # Frontier FRAME
-pallet-base-fee = { path = "../frontier/frame/base-fee", default-features = false }
-pallet-dynamic-fee = { path = "../frontier/frame/dynamic-fee", default-features = false }
-pallet-ethereum = { path = "../frontier/frame/ethereum", default-features = false }
-pallet-evm = { path = "../frontier/frame/evm", default-features = false }
-pallet-evm-chain-id = { path = "../frontier/frame/evm-chain-id", default-features = false }
-pallet-evm-precompile-modexp = { path = "../frontier/frame/evm/precompile/modexp", default-features = false }
-pallet-evm-precompile-sha3fips = { path = "../frontier/frame/evm/precompile/sha3fips", default-features = false }
-pallet-evm-precompile-simple = { path = "../frontier/frame/evm/precompile/simple", default-features = false }
-pallet-hotfix-sufficients = { path = "../frontier/frame/hotfix-sufficients", default-features = false }
+pallet-base-fee = { path = "../../frontier/frame/base-fee", default-features = false }
+pallet-dynamic-fee = { path = "../../frontier/frame/dynamic-fee", default-features = false }
+pallet-ethereum = { path = "../../frontier/frame/ethereum", default-features = false }
+pallet-evm = { path = "../../frontier/frame/evm", default-features = false }
+pallet-evm-chain-id = { path = "../../frontier/frame/evm-chain-id", default-features = false }
+pallet-evm-precompile-modexp = { path = "../../frontier/frame/evm/precompile/modexp", default-features = false }
+pallet-evm-precompile-sha3fips = { path = "../../frontier/frame/evm/precompile/sha3fips", default-features = false }
+pallet-evm-precompile-simple = { path = "../../frontier/frame/evm/precompile/simple", default-features = false }
+pallet-hotfix-sufficients = { path = "../../frontier/frame/hotfix-sufficients", default-features = false }
 # Extra
 pallet-assets = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
-pallet-betting = { path = "../pallets/betting", default-features = false }
+pallet-betting = { path = "../../pallets/betting", default-features = false }
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
-primitives = {  path = "../primitives", default-features = false }
+primitives = {  path = "../../primitives", default-features = false }
 #Precompiles
-pallet-evm-precompile-betting = { path = "../precompiles/betting", default-features = false }
+pallet-evm-precompile-betting = { path = "../../precompiles/betting", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
