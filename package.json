@@ -6,7 +6,7 @@
     "scripts": {
       "blockchain:build": "yarn workspace blockchain build",
       "blockchain": "yarn workspace blockchain start",
-      "blockchain:debug": "yarn workspace blockchain start:bebug",
+      "blockchain:debug": "yarn workspace blockchain start:debug",
       "blockchain:test:evm": "yarn workspace blockchain test:evm",
       "hardhat:test": "yarn workspace hardhat test",
       "hardhat:coverage": "yarn workspace hardhat coverage",
