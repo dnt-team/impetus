@@ -6,6 +6,7 @@ members = [
 	"frontier/primitives/*",
 	"frontier/precompiles/*",
 	"pallets/*",
+	"precompiles/*",
 	"runtime",
 	"primitives",
 ]

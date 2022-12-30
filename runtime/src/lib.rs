@@ -21,11 +21,10 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable, Get,
-		IdentifyAccount, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto, Verify,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable, Get, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, MultiSignature, Perbill, Permill,
+	ApplyExtrinsicResult, Perbill, Permill,
 };
 use sp_std::{marker::PhantomData, prelude::*};
 use sp_version::RuntimeVersion;
@@ -46,10 +45,10 @@ use pallet_evm::{
 };
 
 pub use primitives::{AccountId, Signature};
-use primitives::{AccountIndex, Balance, BlockNumber, Hash, Index, Moment};
+use primitives::{Balance, BlockNumber, Hash, Index};
 
 pub mod constants;
-use constants::{currency::*, time::*};
+use constants::{currency::*};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{

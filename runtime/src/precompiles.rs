@@ -5,6 +5,8 @@ use sp_std::marker::PhantomData;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+// Extra
+use pallet_evm_precompile_betting::BettingPrecompile;
 
 pub struct FrontierPrecompiles<R>(PhantomData<R>);
 
@@ -29,6 +31,7 @@ where
 }
 impl<R> PrecompileSet for FrontierPrecompiles<R>
 where
+	BettingPrecompile<R>: Precompile,
 	R: pallet_evm::Config,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
@@ -42,6 +45,7 @@ where
 			// Non-Frontier specific nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(handle)),
+			a if a == hash(2051) => Some(BettingPrecompile::execute(handle)),
 			_ => None,
 		}
 	}
