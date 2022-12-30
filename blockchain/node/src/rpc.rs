@@ -160,7 +160,7 @@ where
 			client.clone(),
 			pool.clone(),
 			graph,
-			Some(frontier_template_runtime::TransactionConverter),
+			Some(impetus_runtime::TransactionConverter),
 			network.clone(),
 			signers,
 			overrides.clone(),

@@ -23,7 +23,7 @@ use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::{EthTask, OverrideHandle};
 use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 // Runtime
-use frontier_template_runtime::{opaque::Block, RuntimeApi};
+use impetus_runtime::{opaque::Block, RuntimeApi};
 
 use crate::cli::Cli;
 #[cfg(feature = "manual-seal")]
@@ -41,11 +41,11 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		frontier_template_runtime::api::dispatch(method, data)
+		impetus_runtime::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
-		frontier_template_runtime::native_version()
+		impetus_runtime::native_version()
 	}
 }
 
@@ -664,7 +664,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				inherent_data: &mut sp_inherents::InherentData,
 			) -> Result<(), sp_inherents::Error> {
 				TIMESTAMP.with(|x| {
-					*x.borrow_mut() += frontier_template_runtime::SLOT_DURATION;
+					*x.borrow_mut() += impetus_runtime::SLOT_DURATION;
 					inherent_data.put_data(INHERENT_IDENTIFIER, &*x.borrow())
 				})
 			}

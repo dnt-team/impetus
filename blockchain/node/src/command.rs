@@ -64,7 +64,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		&frontier_template_runtime::VERSION
+		&impetus_runtime::VERSION
 	}
 }
 
@@ -169,7 +169,7 @@ pub fn run() -> sc_cli::Result<()> {
 			use frame_benchmarking_cli::{
 				BenchmarkCmd, ExtrinsicFactory, SUBSTRATE_REFERENCE_HARDWARE,
 			};
-			use frontier_template_runtime::{Block, ExistentialDeposit};
+			use impetus_runtime::{Block, ExistentialDeposit};
 
 			let runner = cli.create_runner(cmd)?;
 			match cmd {
@@ -229,7 +229,7 @@ pub fn run() -> sc_cli::Result<()> {
 			runner.sync_run(|config| {
 				let PartialComponents { client, other, .. } = service::new_partial(&config, &cli)?;
 				let frontier_backend = other.2;
-				cmd.run::<_, frontier_template_runtime::opaque::Block>(client, frontier_backend)
+				cmd.run::<_, impetus_runtime::opaque::Block>(client, frontier_backend)
 			})
 		}
 		None => {
