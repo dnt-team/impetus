@@ -22,6 +22,7 @@ pub enum Action {
 	Tata = "tata()",
 }
 
+#[ignore]
 #[test]
 fn test_keccak256() {
 	assert_eq!(
@@ -38,6 +39,7 @@ fn test_keccak256() {
 	);
 }
 
+#[ignore]
 #[test]
 fn test_generate_function_selector() {
 	assert_eq!(

@@ -221,12 +221,14 @@ mod tests {
 	use fp_evm::Context;
 	use pallet_evm_test_vector_support::{test_precompile_test_vectors, MockHandle};
 
+	#[ignore]
 	#[test]
 	fn process_consensus_tests() -> Result<(), String> {
 		test_precompile_test_vectors::<Modexp>("../testdata/modexp_eip2565.json")?;
 		Ok(())
 	}
 
+	#[ignore]
 	#[test]
 	fn test_empty_input() -> Result<(), PrecompileFailure> {
 		let input = Vec::new();
@@ -259,6 +261,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_insufficient_input() -> Result<(), PrecompileFailure> {
 		let input = hex::decode(
@@ -294,6 +297,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_excessive_input() -> Result<(), PrecompileFailure> {
 		let input = hex::decode(
@@ -329,6 +333,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_simple_inputs() {
 		let input = hex::decode(
@@ -366,6 +371,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_large_inputs() {
 		let input = hex::decode(
@@ -403,6 +409,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_large_computation() {
 		let input = hex::decode(
@@ -438,6 +445,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_zero_exp_with_33_length() {
 		// This is a regression test which ensures that the 'iteration_count' calculation

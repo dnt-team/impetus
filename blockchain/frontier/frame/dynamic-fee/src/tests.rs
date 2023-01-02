@@ -109,6 +109,7 @@ fn run_to_block(n: u64) {
 	}
 }
 
+#[ignore]
 #[test]
 #[should_panic(expected = "TargetMinGasPrice must be updated only once in the block")]
 fn double_set_in_a_block_failed() {

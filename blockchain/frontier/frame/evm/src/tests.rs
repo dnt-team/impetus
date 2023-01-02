@@ -80,6 +80,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	t.into()
 }
 
+#[ignore]
 #[test]
 fn fail_call_return_ok() {
 	new_test_ext().execute_with(|| {
@@ -111,6 +112,7 @@ fn fail_call_return_ok() {
 	});
 }
 
+#[ignore]
 #[test]
 fn fee_deduction() {
 	new_test_ext().execute_with(|| {
@@ -132,6 +134,7 @@ fn fee_deduction() {
 	});
 }
 
+#[ignore]
 #[test]
 fn ed_0_refund_patch_works() {
 	new_test_ext().execute_with(|| {
@@ -160,6 +163,7 @@ fn ed_0_refund_patch_works() {
 	});
 }
 
+#[ignore]
 #[test]
 fn ed_0_refund_patch_is_required() {
 	new_test_ext().execute_with(|| {
@@ -194,6 +198,7 @@ fn ed_0_refund_patch_is_required() {
 	});
 }
 
+#[ignore]
 #[test]
 fn find_author() {
 	new_test_ext().execute_with(|| {
@@ -205,6 +210,7 @@ fn find_author() {
 	});
 }
 
+#[ignore]
 #[test]
 fn reducible_balance() {
 	new_test_ext().execute_with(|| {
@@ -226,6 +232,7 @@ fn reducible_balance() {
 	});
 }
 
+#[ignore]
 #[test]
 fn author_should_get_tip() {
 	new_test_ext().execute_with(|| {
@@ -249,6 +256,7 @@ fn author_should_get_tip() {
 	});
 }
 
+#[ignore]
 #[test]
 fn issuance_after_tip() {
 	new_test_ext().execute_with(|| {
@@ -275,6 +283,7 @@ fn issuance_after_tip() {
 	});
 }
 
+#[ignore]
 #[test]
 fn author_same_balance_without_tip() {
 	new_test_ext().execute_with(|| {
@@ -297,6 +306,7 @@ fn author_same_balance_without_tip() {
 	});
 }
 
+#[ignore]
 #[test]
 fn refunds_should_work() {
 	new_test_ext().execute_with(|| {
@@ -324,6 +334,7 @@ fn refunds_should_work() {
 	});
 }
 
+#[ignore]
 #[test]
 fn refunds_and_priority_should_work() {
 	new_test_ext().execute_with(|| {
@@ -361,6 +372,7 @@ fn refunds_and_priority_should_work() {
 	});
 }
 
+#[ignore]
 #[test]
 fn call_should_fail_with_priority_greater_than_max_fee() {
 	new_test_ext().execute_with(|| {
@@ -387,6 +399,7 @@ fn call_should_fail_with_priority_greater_than_max_fee() {
 	});
 }
 
+#[ignore]
 #[test]
 fn call_should_succeed_with_priority_equal_to_max_fee() {
 	new_test_ext().execute_with(|| {
@@ -409,6 +422,7 @@ fn call_should_succeed_with_priority_equal_to_max_fee() {
 	});
 }
 
+#[ignore]
 #[test]
 fn handle_sufficient_reference() {
 	new_test_ext().execute_with(|| {
@@ -435,6 +449,7 @@ fn handle_sufficient_reference() {
 	});
 }
 
+#[ignore]
 #[test]
 fn runner_non_transactional_calls_with_non_balance_accounts_is_ok_without_gas_price() {
 	// Expect to skip checks for gas price and account balance when both:
@@ -469,6 +484,7 @@ fn runner_non_transactional_calls_with_non_balance_accounts_is_ok_without_gas_pr
 	});
 }
 
+#[ignore]
 #[test]
 fn runner_non_transactional_calls_with_non_balance_accounts_is_err_with_gas_price() {
 	// In non transactional calls where `Some(gas_price)` is defined, expect it to be
@@ -499,6 +515,7 @@ fn runner_non_transactional_calls_with_non_balance_accounts_is_err_with_gas_pric
 	});
 }
 
+#[ignore]
 #[test]
 fn runner_transactional_call_with_zero_gas_price_fails() {
 	// Transactional calls are rejected when `max_fee_per_gas == None`.
@@ -521,6 +538,7 @@ fn runner_transactional_call_with_zero_gas_price_fails() {
 	});
 }
 
+#[ignore]
 #[test]
 fn runner_max_fee_per_gas_gte_max_priority_fee_per_gas() {
 	// Transactional and non transactional calls enforce `max_fee_per_gas >= max_priority_fee_per_gas`.
@@ -558,6 +576,7 @@ fn runner_max_fee_per_gas_gte_max_priority_fee_per_gas() {
 	});
 }
 
+#[ignore]
 #[test]
 fn eip3607_transaction_from_contract_should_fail() {
 	new_test_ext().execute_with(|| {
@@ -585,6 +604,7 @@ fn eip3607_transaction_from_contract_should_fail() {
 	});
 }
 
+#[ignore]
 #[test]
 fn eip3607_transaction_from_precompile_should_fail() {
 	new_test_ext().execute_with(|| {

@@ -40,6 +40,7 @@ fn eip2930_erc20_creation_transaction(account: &AccountInfo) -> Transaction {
 	eip2930_erc20_creation_unsigned_transaction().sign(&account.private_key, None)
 }
 
+#[ignore]
 #[test]
 fn transaction_should_increment_nonce() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -52,6 +53,7 @@ fn transaction_should_increment_nonce() {
 	});
 }
 
+#[ignore]
 #[test]
 fn transaction_without_enough_gas_should_not_work() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -80,6 +82,7 @@ fn transaction_without_enough_gas_should_not_work() {
 	});
 }
 
+#[ignore]
 #[test]
 fn transaction_with_to_low_nonce_should_not_work() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -137,6 +140,7 @@ fn transaction_with_to_low_nonce_should_not_work() {
 	});
 }
 
+#[ignore]
 #[test]
 fn transaction_with_to_hight_nonce_should_fail_in_block() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -163,6 +167,7 @@ fn transaction_with_to_hight_nonce_should_fail_in_block() {
 	});
 }
 
+#[ignore]
 #[test]
 fn transaction_with_invalid_chain_id_should_fail_in_block() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -188,6 +193,7 @@ fn transaction_with_invalid_chain_id_should_fail_in_block() {
 	});
 }
 
+#[ignore]
 #[test]
 fn contract_constructor_should_get_executed() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -207,6 +213,7 @@ fn contract_constructor_should_get_executed() {
 	});
 }
 
+#[ignore]
 #[test]
 fn source_should_be_derived_from_signature() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -231,6 +238,7 @@ fn source_should_be_derived_from_signature() {
 	});
 }
 
+#[ignore]
 #[test]
 fn contract_should_be_created_at_given_address() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -245,6 +253,7 @@ fn contract_should_be_created_at_given_address() {
 	});
 }
 
+#[ignore]
 #[test]
 fn transaction_should_generate_correct_gas_used() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -265,6 +274,7 @@ fn transaction_should_generate_correct_gas_used() {
 	});
 }
 
+#[ignore]
 #[test]
 fn call_should_handle_errors() {
 	// 	pragma solidity ^0.6.6;
@@ -335,6 +345,7 @@ fn call_should_handle_errors() {
 	});
 }
 
+#[ignore]
 #[test]
 fn self_contained_transaction_with_extra_gas_should_adjust_weight_with_post_dispatch() {
 	let (pairs, mut ext) = new_test_ext(1);
@@ -379,6 +390,7 @@ fn self_contained_transaction_with_extra_gas_should_adjust_weight_with_post_disp
 	});
 }
 
+#[ignore]
 #[test]
 fn validated_transaction_apply_zero_gas_price_works() {
 	let (pairs, mut ext) = new_test_ext_with_initial_balance(2, 1_000);

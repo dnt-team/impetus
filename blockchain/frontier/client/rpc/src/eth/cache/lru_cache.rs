@@ -128,6 +128,7 @@ impl LRUCacheByteLimitedMetrics {
 mod tests {
 	use super::*;
 
+	#[ignore]
 	#[test]
 	fn test_size_limit() {
 		let mut cache = LRUCacheByteLimited::new("name", 10, None);

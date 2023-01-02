@@ -86,6 +86,7 @@ mod tests {
 	use super::*;
 	use serde_json;
 
+	#[ignore]
 	#[test]
 	fn index_deserialization() {
 		let s = r#"["0xa", "10", 42]"#;

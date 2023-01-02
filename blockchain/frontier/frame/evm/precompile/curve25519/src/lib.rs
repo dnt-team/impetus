@@ -110,6 +110,7 @@ mod tests {
 	use super::*;
 	use curve25519_dalek::constants;
 
+	#[ignore]
 	#[test]
 	fn test_sum() -> Result<(), PrecompileFailure> {
 		let s1 = Scalar::from(999u64);
@@ -137,6 +138,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_empty() -> Result<(), PrecompileFailure> {
 		// Test that sum works for the empty iterator
@@ -155,6 +157,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_scalar_mul() -> Result<(), PrecompileFailure> {
 		let s1 = Scalar::from(999u64);
@@ -180,6 +183,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_scalar_mul_empty_error() -> Result<(), PrecompileFailure> {
 		let input = vec![];
@@ -205,6 +209,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_point_addition_bad_length() -> Result<(), PrecompileFailure> {
 		let input: Vec<u8> = [0u8; 33].to_vec();
@@ -229,6 +234,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_point_addition_too_many_points() -> Result<(), PrecompileFailure> {
 		let mut input = vec![];

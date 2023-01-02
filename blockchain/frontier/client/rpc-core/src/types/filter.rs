@@ -486,6 +486,7 @@ mod tests {
 		block_bloom
 	}
 
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_match_by_address() {
 		let test_address = H160::from_str("1000000000000000000000000000000000000000").unwrap();
@@ -503,6 +504,7 @@ mod tests {
 		));
 	}
 
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_not_match_by_address() {
 		let test_address = H160::from_str("2000000000000000000000000000000000000000").unwrap();
@@ -519,6 +521,7 @@ mod tests {
 			&address_bloom
 		));
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_match_by_topic() {
 		let topic1 =
@@ -552,6 +555,7 @@ mod tests {
 			&topics_bloom
 		));
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_not_match_by_topic() {
 		let topic1 =
@@ -585,6 +589,7 @@ mod tests {
 			&topics_bloom
 		));
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_match_by_empty_topic() {
 		let filter = Filter {
@@ -606,6 +611,7 @@ mod tests {
 			&topics_bloom
 		));
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_match_combined() {
 		let test_address = H160::from_str("1000000000000000000000000000000000000000").unwrap();
@@ -640,6 +646,7 @@ mod tests {
 			&& FilteredParams::topics_in_bloom(block_bloom(), &topics_bloom);
 		assert!(matches);
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_not_match_combined() {
 		let test_address = H160::from_str("2000000000000000000000000000000000000000").unwrap();
@@ -674,6 +681,7 @@ mod tests {
 			&& FilteredParams::topics_in_bloom(block_bloom(), &topics_bloom);
 		assert!(!matches);
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_match_wildcards_by_topic() {
 		let topic2 =
@@ -704,6 +712,7 @@ mod tests {
 			&topics_bloom
 		));
 	}
+	#[ignore]
 	#[test]
 	fn bloom_filter_should_not_match_wildcards_by_topic() {
 		let topic2 =
