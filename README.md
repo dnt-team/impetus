@@ -5,6 +5,12 @@
 
 ##### Rust
 Complete the [basic Rust setup instructions](https://github.com/substrate-developer-hub/substrate-node-template/blob/main/docs/rust-setup.md).
+
+Additional command
+```sh
+rustup default nightly
+sudo apt install protobuf-compiler
+```
 ##### Yarn
 Complete the [basic Yarn setup instructions](https://classic.yarnpkg.com/lang/en/docs/install/#windows-stable).
 
