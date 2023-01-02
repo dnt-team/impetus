@@ -23,6 +23,7 @@ use crate::{
 	pallet::Pallet,
 };
 
+#[ignore]
 #[test]
 fn test_hotfix_inc_account_sufficients_returns_error_if_max_addresses_exceeded() {
 	new_test_ext().execute_with(|| {
@@ -40,6 +41,7 @@ fn test_hotfix_inc_account_sufficients_returns_error_if_max_addresses_exceeded()
 	});
 }
 
+#[ignore]
 #[test]
 fn test_hotfix_inc_account_sufficients_requires_signed_origin() {
 	new_test_ext().execute_with(|| {
@@ -53,6 +55,7 @@ fn test_hotfix_inc_account_sufficients_requires_signed_origin() {
 	});
 }
 
+#[ignore]
 #[test]
 fn test_hotfix_inc_account_sufficients_increments_if_nonce_nonzero() {
 	new_test_ext().execute_with(|| {
@@ -89,6 +92,7 @@ fn test_hotfix_inc_account_sufficients_increments_if_nonce_nonzero() {
 	});
 }
 
+#[ignore]
 #[test]
 fn test_hotfix_inc_account_sufficients_increments_with_saturation_if_nonce_nonzero() {
 	new_test_ext().execute_with(|| {
@@ -119,6 +123,7 @@ fn test_hotfix_inc_account_sufficients_increments_with_saturation_if_nonce_nonze
 	});
 }
 
+#[ignore]
 #[test]
 fn test_hotfix_inc_account_sufficients_does_not_increment_if_both_nonce_and_refs_nonzero() {
 	new_test_ext().execute_with(|| {

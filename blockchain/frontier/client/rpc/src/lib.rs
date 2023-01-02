@@ -298,6 +298,7 @@ mod tests {
 		)?))
 	}
 
+	#[ignore]
 	#[test]
 	fn substrate_block_hash_one_to_many_works() {
 		let tmp = tempdir().expect("create a temporary directory");

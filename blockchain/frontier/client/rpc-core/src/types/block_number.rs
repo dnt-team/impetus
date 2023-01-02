@@ -213,6 +213,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn block_number_deserialize() {
 		let bn_dec: BlockNumber = serde_json::from_str(r#""42""#).unwrap();

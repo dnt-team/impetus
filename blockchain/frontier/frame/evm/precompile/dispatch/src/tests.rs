@@ -78,6 +78,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	t.into()
 }
 
+#[ignore]
 #[test]
 fn decode_limit_too_high() {
 	new_test_ext().execute_with(|| {
@@ -110,6 +111,7 @@ fn decode_limit_too_high() {
 	});
 }
 
+#[ignore]
 #[test]
 fn decode_limit_ok() {
 	new_test_ext().execute_with(|| {

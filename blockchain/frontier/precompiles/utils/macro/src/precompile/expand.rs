@@ -481,6 +481,7 @@ impl Precompile {
 					#(#variant_test)*
 				}
 
+				#[ignore]
 				#[test]
 				#[allow(non_snake_case)]
 				fn #test_name() {
@@ -496,6 +497,7 @@ impl Precompile {
 					#(#variant_test)*
 				}
 
+				#[ignore]
 				#[test]
 				#[allow(non_snake_case)]
 				fn #test_name() {

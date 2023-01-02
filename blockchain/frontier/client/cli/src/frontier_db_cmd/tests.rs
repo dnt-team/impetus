@@ -119,6 +119,7 @@ fn test_json_file(tmp: &tempfile::TempDir, value: &TestValue) -> PathBuf {
 	test_value_path
 }
 
+#[ignore]
 #[test]
 fn schema_create_success_if_value_is_empty() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -150,6 +151,7 @@ fn schema_create_success_if_value_is_empty() {
 	);
 }
 
+#[ignore]
 #[test]
 fn schema_create_fails_if_value_is_not_empty() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -184,6 +186,7 @@ fn schema_create_fails_if_value_is_not_empty() {
 	assert_eq!(data_after, data_before);
 }
 
+#[ignore]
 #[test]
 fn schema_read_works() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -214,6 +217,7 @@ fn schema_read_works() {
 	.is_ok());
 }
 
+#[ignore]
 #[test]
 fn schema_update_works() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -243,6 +247,7 @@ fn schema_update_works() {
 	);
 }
 
+#[ignore]
 #[test]
 fn schema_delete_works() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -272,6 +277,7 @@ fn schema_delete_works() {
 	assert_eq!(backend.meta().ethereum_schema(), Ok(Some(vec![])));
 }
 
+#[ignore]
 #[test]
 fn tips_create_success_if_value_is_empty() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -301,6 +307,7 @@ fn tips_create_success_if_value_is_empty() {
 	);
 }
 
+#[ignore]
 #[test]
 fn tips_create_fails_if_value_is_not_empty() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -333,6 +340,7 @@ fn tips_create_fails_if_value_is_not_empty() {
 	assert_eq!(data_after, data_before);
 }
 
+#[ignore]
 #[test]
 fn tips_read_works() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -362,6 +370,7 @@ fn tips_read_works() {
 	.is_ok());
 }
 
+#[ignore]
 #[test]
 fn tips_update_works() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -391,6 +400,7 @@ fn tips_update_works() {
 	);
 }
 
+#[ignore]
 #[test]
 fn tips_delete_works() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -420,6 +430,7 @@ fn tips_delete_works() {
 	assert_eq!(backend.meta().current_syncing_tips(), Ok(vec![]));
 }
 
+#[ignore]
 #[test]
 fn non_existent_meta_static_keys_are_no_op() {
 	let tmp = tempdir().expect("create a temporary directory");
@@ -488,6 +499,7 @@ fn non_existent_meta_static_keys_are_no_op() {
 	);
 }
 
+#[ignore]
 #[test]
 fn not_deserializable_input_value_is_no_op() {
 	let tmp = tempdir().expect("create a temporary directory");

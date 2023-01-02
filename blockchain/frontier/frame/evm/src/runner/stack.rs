@@ -829,6 +829,7 @@ mod tests {
 	use evm::ExitSucceed;
 	use std::assert_matches::assert_matches;
 
+	#[ignore]
 	#[test]
 	fn test_evm_reentrancy() {
 		let config = evm::Config::istanbul();

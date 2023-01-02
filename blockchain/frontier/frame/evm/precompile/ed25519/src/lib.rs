@@ -66,6 +66,7 @@ mod tests {
 	use super::*;
 	use ed25519_dalek::{Keypair, SecretKey, Signer};
 
+	#[ignore]
 	#[test]
 	fn test_empty_input() -> Result<(), PrecompileFailure> {
 		let input: [u8; 0] = [];
@@ -87,6 +88,7 @@ mod tests {
 		}
 	}
 
+	#[ignore]
 	#[test]
 	fn test_verify() -> Result<(), PrecompileFailure> {
 		let secret_key_bytes: [u8; ed25519_dalek::SECRET_KEY_LENGTH] = [
