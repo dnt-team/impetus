@@ -154,11 +154,27 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
-		BettingRoundRegistered(T::Hash),
-		ParticipatedInRound(T::Hash, T::AccountId, u128, BalanceOf<T>),
-		BettingRoundClosed(T::Hash),
-		RoundRewardClaimed(T::Hash, T::AccountId),
-		RoundRewardClaimFailed(T::Hash, T::AccountId, sp_runtime::DispatchError),
+		BettingRoundRegistered {
+			round_id: T::Hash,
+		},
+		ParticipatedInRound {
+			round_id: T::Hash,
+			account: T::AccountId,
+			selection: u128,
+			amount: BalanceOf<T>,
+		},
+		BettingRoundClosed {
+			round_id: T::Hash,
+		},
+		RoundRewardClaimed {
+			round_id: T::Hash,
+			account: T::AccountId,
+		},
+		RoundRewardClaimFailed {
+			round_id: T::Hash,
+			account: T::AccountId,
+			error: sp_runtime::DispatchError,
+		},
 	}
 
 	// Errors inform users that something went wrong.
@@ -234,7 +250,7 @@ pub mod pallet {
 
 			// Emit an event.
 			<InfoBettingRound<T>>::insert(round_id, betting_round);
-			Self::deposit_event(Event::BettingRoundRegistered(round_id));
+			Self::deposit_event(Event::<T>::BettingRoundRegistered { round_id });
 			// Return a successful DispatchResultWithPostInfo
 			Ok(())
 		}
@@ -276,12 +292,13 @@ pub mod pallet {
 				amount.saturated_into(),
 			)?;
 			// deposit event consider to remove
-			Self::deposit_event(Event::ParticipatedInRound(
+			Self::deposit_event(Event::<T>::ParticipatedInRound {
 				round_id,
-				bettor_address.clone(),
-				bet,
+				account: bettor_address.clone(),
+				selection: bet,
 				amount,
-			));
+			});
+
 			<InfoBettingRound<T>>::mutate(round_id, |v| {
 				if let Some(x) = v {
 					x.total = x.total.saturating_add(amount)
@@ -362,14 +379,17 @@ pub mod pallet {
 						&bettor_address,
 						betting_round.winner,
 					));
-					Self::deposit_event(Event::RoundRewardClaimed(round_id, bettor_address));
+					Self::deposit_event(Event::<T>::RoundRewardClaimed {
+						round_id,
+						account: bettor_address,
+					});
 				}
 				Err(error) => {
-					Self::deposit_event(Event::RoundRewardClaimFailed(
+					Self::deposit_event(Event::<T>::RoundRewardClaimFailed {
 						round_id,
-						bettor_address,
+						account: bettor_address,
 						error,
-					));
+					});
 				}
 			};
 			Ok(())

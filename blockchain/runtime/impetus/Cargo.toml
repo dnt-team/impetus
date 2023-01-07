@@ -63,6 +63,7 @@ pallet-hotfix-sufficients = { path = "../../frontier/frame/hotfix-sufficients", 
 # Extra
 pallet-assets = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
 pallet-betting = { path = "../../pallets/betting", default-features = false }
+pallet-lottery = { path = "../../pallets/lottery", default-features = false }
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
 primitives = {  path = "../../primitives", default-features = false }
 #Precompiles
@@ -125,6 +126,7 @@ std = [
 	"primitives/std",
 	"pallet-assets/std",
 	"pallet-betting/std",
+	"pallet-lottery/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

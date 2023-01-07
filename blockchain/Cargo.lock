@@ -1327,6 +1327,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dissimilar"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd5f0c7e4bd266b8ab2550e6238d2e74977c23c15536ac7be45e9c95e2e3fbbb"
+
+[[package]]
 name = "dns-parser"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2230,6 +2236,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "frame-support-test"
+version = "3.0.0"
+source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
+dependencies = [
+ "frame-support",
+ "frame-support-test-pallet",
+ "frame-system",
+ "parity-scale-codec",
+ "pretty_assertions",
+ "rustversion",
+ "scale-info",
+ "serde",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-std",
+ "sp-version",
+ "trybuild",
+]
+
+[[package]]
+name = "frame-support-test-pallet"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+]
+
+[[package]]
 name = "frame-system"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
@@ -2881,6 +2921,7 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-hotfix-sufficients",
+ "pallet-lottery",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
@@ -4617,6 +4658,23 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-evm",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-lottery"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-support-test",
+ "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "sp-core",
@@ -8747,6 +8805,7 @@ version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed01de3de062db82c0920b5cabe804f88d599a3f217932292597c678c903754d"
 dependencies = [
+ "dissimilar",
  "glob",
  "once_cell",
  "serde",
