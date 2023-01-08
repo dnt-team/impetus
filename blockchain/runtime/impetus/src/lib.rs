@@ -45,7 +45,7 @@ use pallet_evm::{
 };
 
 pub use primitives::{AccountId, Signature};
-use primitives::{Balance, BlockNumber, Hash, Index};
+use primitives::{Balance, BlockNumber, Hash, Index, lottery::LotteryKind};
 
 pub mod constants;
 use constants::{currency::*};
@@ -414,18 +414,19 @@ parameter_types! {
 	pub const LotteryPalletId: PalletId = PalletId(*b"plottery");
 	pub const MaxCalls: u32 = 10;
 	pub const MaxGenerateRandom: u32 = 10;
+	pub const MaxParticipants: u32 = u32::MAX / 2;
 }
 
 impl pallet_lottery::Config for Runtime {
 	type PalletId = LotteryPalletId;
+	type LotteryKind = LotteryKind;
 	type RuntimeCall = RuntimeCall;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	type RuntimeEvent = RuntimeEvent;
 	type ManagerOrigin = EnsureRoot<AccountId>;
-	type MaxCalls = MaxCalls;
-	type ValidateCall = Lottery;
 	type MaxGenerateRandom = MaxGenerateRandom;
+	type MaxParticipants = MaxGenerateRandom;
 	type WeightInfo = pallet_lottery::weights::SubstrateWeight<Runtime>;
 }
 

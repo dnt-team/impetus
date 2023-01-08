@@ -20,6 +20,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod assets;
+pub mod lottery;
 
 use sp_runtime::{
     generic,
