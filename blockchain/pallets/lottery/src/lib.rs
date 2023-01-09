@@ -157,7 +157,10 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// A lottery has been started!
-		LotteryStarted,
+		LotteryStarted {
+			kind: T::LotteryKind,
+			index: u32,
+		},
 		/// A new set of calls have been set!
 		CallsUpdated,
 		/// A winner has been chosen!
@@ -355,7 +358,7 @@ pub mod pallet {
 				T::Currency::deposit_creating(&lottery_account, T::Currency::minimum_balance());
 			}
 			// Deposit an event to indicate that the lottery has started
-			Self::deposit_event(Event::<T>::LotteryStarted);
+			Self::deposit_event(Event::<T>::LotteryStarted {kind, index});
 			Ok(())
 		}
 	}
