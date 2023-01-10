@@ -65,6 +65,7 @@ use frame_support::{
 };
 pub use pallet::*;
 use scale_info::TypeInfo;
+use sp_core::ConstU32;
 use sp_runtime::{
 	traits::{AccountIdConversion, Saturating, Zero},
 	ArithmeticError, DispatchError,
@@ -77,7 +78,7 @@ type BalanceOf<T> =
 
 // Any runtime call can be encoded into two bytes which represent the pallet and call index.
 // We use this to uniquely match someone's incoming call with the calls configured for the lottery.
-type LotterySelection = [u8; 10];
+type LotterySelection = BoundedVec<u8, ConstU32<10>>;
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
 pub struct LotteryConfig<BlockNumber, Balance> {
 	/// Price per entry.
@@ -302,7 +303,7 @@ pub mod pallet {
 			selection: LotterySelection,
 		) -> DispatchResult {
 			let caller = ensure_signed(origin.clone())?;
-			let _ = Self::do_buy_ticket(caller, kind, index, selection);
+			Self::do_buy_ticket(caller, kind, index, selection)?;
 			Ok(())
 		}
 
@@ -383,27 +384,6 @@ impl<T: Config> Pallet<T> {
 		(account_id, balance)
 	}
 
-	/// Converts a vector of calls into a vector of call indices.
-	// fn calls_to_indices(
-	// 	calls: &[<T as Config>::RuntimeCall],
-	// ) -> Result<BoundedVec<CallIndex, T::MaxCalls>, DispatchError> {
-	// 	let mut indices = BoundedVec::<CallIndex, T::MaxCalls>::with_bounded_capacity(calls.len());
-	// 	for c in calls.iter() {
-	// 		let index = Self::call_to_index(c)?;
-	// 		indices.try_push(index).map_err(|_| Error::<T>::TooManyCalls)?;
-	// 	}
-	// 	Ok(indices)
-	// }
-
-	/// Convert a call to it's call index by encoding the call and taking the first two bytes.
-	// fn call_to_index(call: &<T as Config>::RuntimeCall) -> Result<CallIndex, DispatchError> {
-	// 	let encoded_call = call.encode();
-	// 	if encoded_call.len() < 2 {
-	// 		return Err(Error::<T>::EncodingFailed.into())
-	// 	}
-	// 	Ok((encoded_call[0], encoded_call[1]))
-	// }
-
 	/// Logic for buying a ticket.
 	fn do_buy_ticket(
 		caller: T::AccountId,
@@ -418,10 +398,9 @@ impl<T: Config> Pallet<T> {
 			block_number < config.start.saturating_add(config.length),
 			Error::<T>::AlreadyEnded
 		);
-
 		// Try to update the participant status
 		Participants::<T>::try_mutate(
-			(kind, index, selection),
+			(kind, index, &selection),
 			|v| -> Result<(), DispatchError> {
 				ensure!(!v.is_full(), Error::<T>::TooManyParticipants);
 				T::Currency::transfer(&caller, &Self::account_id(), config.price, KeepAlive)?;
@@ -430,7 +409,6 @@ impl<T: Config> Pallet<T> {
 				Ok(())
 			},
 		)?;
-
 		Self::deposit_event(Event::<T>::TicketBought {
 			kind,
 			index,

@@ -4674,6 +4674,7 @@ dependencies = [
  "frame-support",
  "frame-support-test",
  "frame-system",
+ "log",
  "pallet-balances",
  "parity-scale-codec",
  "scale-info",
