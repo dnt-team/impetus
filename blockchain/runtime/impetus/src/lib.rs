@@ -413,7 +413,7 @@ parameter_types! {
 	pub const MaxGenerateRandom: u32 = 10;
 	pub const MaxParticipants: u32 = u32::MAX / 2;
 	pub const PotDeposit: Balance =  1000 * DOLLARS;
-
+	pub const MaxUserRewardPerRound: u32 = 256;
 }
 
 impl pallet_lucky_number::Config for Runtime {
@@ -424,6 +424,8 @@ impl pallet_lucky_number::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type ManagerOrigin = EnsureRoot<AccountId>;
 	type PotDeposit = PotDeposit;
+	type MaxUserRewardPerRound = MaxUserRewardPerRound;
+	type MaxSet = MaxParticipants;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.

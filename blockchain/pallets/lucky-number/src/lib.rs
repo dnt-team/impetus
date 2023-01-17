@@ -94,12 +94,11 @@ pub struct LotteryConfig<BlockNumber, Balance> {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::pallet_prelude::*;
+	use frame_support::{pallet_prelude::*, BoundedBTreeSet};
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
-	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	/// The pallet's config trait.
@@ -129,6 +128,12 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type PotDeposit: Get<BalanceOf<Self>>;
+
+		#[pallet::constant]
+		type MaxSet: Get<u32>;
+
+		#[pallet::constant]
+		type MaxUserRewardPerRound: Get<u32>;
 	}
 
 	#[pallet::event]
@@ -188,20 +193,27 @@ pub mod pallet {
 		StorageValue<_, LotteryConfig<T::BlockNumber, BalanceOf<T>>>;
 
 	#[pallet::storage]
-	pub(crate) type Participants<T: Config> = StorageDoubleMap<
+	pub(crate) type Participants<T: Config> = StorageMap<
 		_,
 		Twox64Concat,
-		u32,
+		(u32, u8),
+		BoundedBTreeSet<T::AccountId, T::MaxSet>,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	pub(crate) type Winners<T: Config> = StorageMap<
+		_,
 		Twox64Concat,
-		u8,
-		BTreeSet<T::AccountId>,
+		(u32, u8),
+		BoundedBTreeSet<T::AccountId, T::MaxSet>,
 		ValueQuery,
 	>;
 
 	/// Total number of tickets sold.
 	#[pallet::storage]
-	pub(crate) type UserPredictionValue<T> =
-		StorageDoubleMap<_, Twox64Concat, u32, Twox64Concat, u8, BalanceOf<T>, ValueQuery>;
+	pub(crate) type UserPredictionValue<T: Config> =
+		StorageDoubleMap<_, Twox64Concat, u32, Twox64Concat, (T::AccountId, u8), BalanceOf<T>, ValueQuery>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -209,16 +221,20 @@ pub mod pallet {
 			let index = LuckyNumberRound::<T>::get();
 			Lottery::<T>::mutate(|mut lottery| -> Weight {
 				if let Some(config) = &mut lottery {
+					if n == config.start && index != 0 {
+						Self::deposit_event(Event::<T>::LuckyNumberStarted {
+							index
+						});
+					}
 					let payout_block = config
 						.start
 						.saturating_add(config.length)
 						.saturating_add(config.delay);
 					if payout_block < n {
-						let (lottery_account, lottery_balance) = Self::pot();
 						let number = Self::random_number(index);
 						Self::deposit_event(Event::<T>::LuckyNumber { index, number });
-                        LuckyNumberRound::<T>::mutate(|index| *index = index.saturating_add(1));
-                        config.start = n;
+						LuckyNumberRound::<T>::mutate(|index| *index = index.saturating_add(1));
+						config.start = n;
 					}
 				}
 				T::DbWeight::get().reads(1)
@@ -256,11 +272,16 @@ pub mod pallet {
 				Error::<T>::AlreadyEnded
 			);
 
-			Participants::<T>::try_mutate(index, number, |participants| -> DispatchResult {
-				let check = participants.insert(caller.clone());
+			Participants::<T>::try_mutate((index, number), |participants| -> DispatchResult {
+				let check = participants.contains(&caller);
 				match check {
-					true => UserPredictionValue::<T>::insert(index, number, amount),
-					false => UserPredictionValue::<T>::mutate(index, number, |v| {
+					false => {
+						participants
+							.try_insert(caller.clone())
+							.map_err(|_| Error::<T>::TooManyParticipants)?;
+						UserPredictionValue::<T>::insert(index, (&caller, number), amount)
+					}
+					true => UserPredictionValue::<T>::mutate(index, (&caller, number), |v| {
 						*v = v.saturating_add(amount)
 					}),
 				}
