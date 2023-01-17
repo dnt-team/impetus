@@ -70,7 +70,7 @@ use sp_runtime::{
 	traits::{AccountIdConversion, Saturating, Zero},
 	ArithmeticError, DispatchError,
 };
-use sp_std::prelude::*;
+use sp_std::{collections::btree_set::BTreeSet, prelude::*};
 pub use weights::WeightInfo;
 
 type BalanceOf<T> =
@@ -91,7 +91,7 @@ pub struct LotteryConfig<BlockNumber, Balance> {
 	/// Randomness in the "payout" block will be used to determine the winner.
 	delay: BlockNumber,
 	/// Whether this lottery will repeat after it completes.
-	repeat: bool,
+	active: bool,
 }
 
 // Struct for holding kitty information
@@ -118,7 +118,6 @@ pub mod pallet {
 		/// The Lottery's pallet id
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
-		/// The type used as a unique asset id,
 		/// The type used as a unique asset id,
 		type LotteryKind: Copy + Parameter + Member + Default + TypeInfo + MaxEncodedLen;
 
@@ -158,10 +157,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// A lottery has been started!
-		LotteryStarted {
-			kind: T::LotteryKind,
-			index: u32,
-		},
+		LotteryStarted { kind: T::LotteryKind, index: u32 },
 		/// A new set of calls have been set!
 		CallsUpdated,
 		/// A winner has been chosen!
@@ -174,6 +170,13 @@ pub mod pallet {
 			kind: T::LotteryKind,
 			index: u32,
 			user: T::AccountId,
+			selection: LotterySelection,
+		},
+
+		RandomNumber {
+			kind: T::LotteryKind,
+			index: u32,
+			block: T::BlockNumber,
 			selection: LotterySelection,
 		},
 	}
@@ -236,50 +239,79 @@ pub mod pallet {
 	#[pallet::storage]
 	pub(crate) type Tickets<T: Config> = StorageMap<_, Twox64Concat, u32, T::AccountId>;
 
-	// #[pallet::hooks]
-	// impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-	// 	fn on_initialize(n: T::BlockNumber) -> Weight {
-	// 		Lottery::<T>::mutate(|mut lottery| -> Weight {
-	// 			if let Some(config) = &mut lottery {
-	// 				let payout_block =
-	// 					config.start.saturating_add(config.length).saturating_add(config.delay);
-	// 				if payout_block <= n {
-	// 					let (lottery_account, lottery_balance) = Self::pot();
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn on_initialize(n: T::BlockNumber) -> Weight {
+			for (kind, index, lottery) in <Lottery<T>>::iter() {
+				let payout_block = lottery
+					.start
+					.saturating_add(lottery.length)
+					.saturating_add(lottery.delay);
+				if payout_block < n {
+					let (lottery_account, lottery_balance) = Self::pot();
+					let selection: LotterySelection = Self::random_number(55, 5).try_into().unwrap();
+					Self::deposit_event(Event::<T>::RandomNumber {
+						kind,
+						index,
+						block: n,
+						selection,
+					});
+					Lottery::<T>::mutate(kind, index, |mut l| -> Weight {
+						if let Some(config) = &mut l { 
+							config.start = n;
+							return T::WeightInfo::on_initialize_repeat()
+						}
+						T::DbWeight::get().reads(1)
+					});
+				}
 
-	// 					let winner = Self::choose_account().unwrap_or(lottery_account);
-	// 					// Not much we can do if this fails...
-	// 					let res = T::Currency::transfer(
-	// 						&Self::account_id(),
-	// 						&winner,
-	// 						lottery_balance,
-	// 						KeepAlive,
-	// 					);
-	// 					debug_assert!(res.is_ok());
+			}
+			// Lottery::<T>::mutate(|mut lottery| -> Weight {
+			// 	if let Some(config) = &mut lottery {
+			// 		let payout_block = config
+			// 			.start
+			// 			.saturating_add(config.length)
+			// 			.saturating_add(config.delay);
+			// 		if payout_block <= n {
+			// 			let (lottery_account, lottery_balance) = Self::pot();
 
-	// 					Self::deposit_event(Event::<T>::Winner { winner, lottery_balance });
+			// 			let winner = Self::choose_account().unwrap_or(lottery_account);
+			// 			// Not much we can do if this fails...
+			// 			let res = T::Currency::transfer(
+			// 				&Self::account_id(),
+			// 				&winner,
+			// 				lottery_balance,
+			// 				KeepAlive,
+			// 			);
+			// 			debug_assert!(res.is_ok());
 
-	// 					TicketsCount::<T>::kill();
+			// 			Self::deposit_event(Event::<T>::Winner {
+			// 				winner,
+			// 				lottery_balance,
+			// 			});
 
-	// 					if config.repeat {
-	// 						// If lottery should repeat, increment index by 1.
-	// 						LotteryIndex::<T>::mutate(|index| *index = index.saturating_add(1));
-	// 						// Set a new start with the current block.
-	// 						config.start = n;
-	// 						return T::WeightInfo::on_initialize_repeat()
-	// 					} else {
-	// 						// Else, kill the lottery storage.
-	// 						*lottery = None;
-	// 						return T::WeightInfo::on_initialize_end()
-	// 					}
-	// 					// We choose not need to kill Participants and Tickets to avoid a large
-	// 					// number of writes at one time. Instead, data persists between lotteries,
-	// 					// but is not used if it is not relevant.
-	// 				}
-	// 			}
-	// 			T::DbWeight::get().reads(1)
-	// 		})
-	// 	}
-	// }
+			// 			TicketsCount::<T>::kill();
+
+			// 			if config.repeat {
+			// 				// If lottery should repeat, increment index by 1.
+			// 				LotteryIndex::<T>::mutate(|index| *index = index.saturating_add(1));
+			// 				// Set a new start with the current block.
+			// 				config.start = n;
+			// 				return T::WeightInfo::on_initialize_repeat();
+			// 			} else {
+			// 				// Else, kill the lottery storage.
+			// 				*lottery = None;
+			// 				return T::WeightInfo::on_initialize_end();
+			// 			}
+			// 			// We choose not need to kill Participants and Tickets to avoid a large
+			// 			// number of writes at one time. Instead, data persists between lotteries,
+			// 			// but is not used if it is not relevant.
+			// 		}
+			// 	}
+				T::DbWeight::get().reads_writes(1, 1)
+			// })
+		}
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -325,7 +357,7 @@ pub mod pallet {
 			price: BalanceOf<T>,
 			length: T::BlockNumber,
 			delay: T::BlockNumber,
-			repeat: bool,
+			active: bool,
 		) -> DispatchResult {
 			T::ManagerOrigin::ensure_origin(origin)?;
 			// Get the current index for the given kind of lottery
@@ -344,7 +376,7 @@ pub mod pallet {
 					start,
 					length,
 					delay,
-					repeat,
+					active,
 				});
 				// Update the index for the given kind of lottery
 				<LotteryIndex<T>>::mutate(kind, |v| {
@@ -359,7 +391,7 @@ pub mod pallet {
 				T::Currency::deposit_creating(&lottery_account, T::Currency::minimum_balance());
 			}
 			// Deposit an event to indicate that the lottery has started
-			Self::deposit_event(Event::<T>::LotteryStarted {kind, index});
+			Self::deposit_event(Event::<T>::LotteryStarted { kind, index });
 			Ok(())
 		}
 	}
@@ -421,31 +453,20 @@ impl<T: Config> Pallet<T> {
 	/// Randomly choose a winning ticket and return the account that purchased it.
 	/// The more tickets an account bought, the higher are its chances of winning.
 	/// Returns `None` if there is no winner.
-	// fn choose_account() -> Option<T::AccountId> {
-	// 	match Self::choose_ticket(TicketsCount::<T>::get()) {
-	// 		None => None,
-	// 		Some(ticket) => Tickets::<T>::get(ticket),
-	// 	}
-	// }
-
-	/// Randomly choose a winning ticket from among the total number of tickets.
-	/// Returns `None` if there are no tickets.
-	fn choose_ticket(total: u32) -> Option<u32> {
-		if total == 0 {
-			return None;
-		}
-		let mut random_number = Self::generate_random_number(0);
-
-		// Best effort attempt to remove bias from modulus operator.
-		for i in 1..T::MaxGenerateRandom::get() {
-			if random_number < u32::MAX - u32::MAX % total {
-				break;
+	fn random_number(max_number: u8, amount_number_random: u8) -> Vec<u8> {
+		// Get the current block's random seed
+		let mut random_numbers = vec![];
+		let mut set = BTreeSet::new();
+		while set.len() < amount_number_random as usize {
+			let random_number = Self::generate_random_number(set.len() as u32);
+			let random_number = (random_number % max_number as u32 + 1) as u8;
+			if !set.contains(&random_number) {
+				random_numbers.push(random_number);
+				set.insert(random_number);
 			}
-
-			random_number = Self::generate_random_number(i);
 		}
-
-		Some(random_number % total)
+		random_numbers.sort();
+		random_numbers
 	}
 
 	/// Generate a random number from a given seed.

@@ -410,22 +410,20 @@ impl pallet_betting::Config for Runtime {
 
 parameter_types! {
 	pub const LotteryPalletId: PalletId = PalletId(*b"plottery");
-	pub const MaxCalls: u32 = 10;
 	pub const MaxGenerateRandom: u32 = 10;
 	pub const MaxParticipants: u32 = u32::MAX / 2;
+	pub const PotDeposit: Balance =  1000 * DOLLARS;
+
 }
 
-impl pallet_lottery::Config for Runtime {
+impl pallet_lucky_number::Config for Runtime {
 	type PalletId = LotteryPalletId;
-	type LotteryKind = LotteryKind;
 	type RuntimeCall = RuntimeCall;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	type RuntimeEvent = RuntimeEvent;
 	type ManagerOrigin = EnsureRoot<AccountId>;
-	type MaxGenerateRandom = MaxGenerateRandom;
-	type MaxParticipants = MaxGenerateRandom;
-	type WeightInfo = pallet_lottery::weights::SubstrateWeight<Runtime>;
+	type PotDeposit = PotDeposit;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -451,7 +449,7 @@ construct_runtime!(
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>},
 		Betting: pallet_betting::{Pallet, Call, Storage, Event<T>},
-		Lottery: pallet_lottery,
+		LuckyNumber: pallet_lucky_number,
 	}
 );
 

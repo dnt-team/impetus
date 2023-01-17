@@ -16,13 +16,6 @@ use sp_std::{convert::TryInto, marker::PhantomData, vec::Vec};
 type BalanceOf<Runtime> = <<Runtime as pallet_betting::Config>::Currency as Currency<
 	<Runtime as frame_system::Config>::AccountId,
 >>::Balance;
-/// A precompile to wrap the functionality from parachain_staking.
-///
-/// EXAMPLE USECASE:
-/// A simple example usecase is a contract that allows donors to donate, and stakes all the funds
-/// toward one fixed address chosen by the deployer.
-/// Such a contract could be deployed by a collator candidate, and the deploy address distributed to
-/// supporters who want to donate toward a perpetual nomination fund.
 pub struct BettingPrecompile<Runtime>(PhantomData<Runtime>);
 
 type GetHashStringLimit = ConstU32<100>;

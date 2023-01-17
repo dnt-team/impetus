@@ -2921,7 +2921,7 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-hotfix-sufficients",
- "pallet-lottery",
+ "pallet-lucky-number",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
@@ -4668,6 +4668,24 @@ dependencies = [
 
 [[package]]
 name = "pallet-lottery"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-support-test",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-lucky-number"
 version = "4.0.0-dev"
 dependencies = [
  "frame-benchmarking",
