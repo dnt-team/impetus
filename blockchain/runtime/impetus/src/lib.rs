@@ -45,7 +45,7 @@ use pallet_evm::{
 };
 
 pub use primitives::{AccountId, Signature};
-use primitives::{Balance, BlockNumber, Hash, Index, lottery::LotteryKind};
+use primitives::{Balance, BlockNumber, Hash, Index};
 
 pub mod constants;
 use constants::{currency::*};

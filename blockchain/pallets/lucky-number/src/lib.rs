@@ -59,37 +59,19 @@ use frame_support::{
 	dispatch::{DispatchResult, Dispatchable, GetDispatchInfo},
 	ensure,
 	pallet_prelude::MaxEncodedLen,
-	storage::bounded_vec::BoundedVec,
-	traits::{Currency, ExistenceRequirement::KeepAlive, Get, Randomness, ReservableCurrency},
-	PalletId, RuntimeDebug,
+	traits::{Currency, ExistenceRequirement, Get, Randomness, ReservableCurrency},
+	PalletId,
 };
 pub use pallet::*;
 use scale_info::TypeInfo;
-use sp_core::ConstU32;
 use sp_runtime::{
 	traits::{AccountIdConversion, Saturating, Zero},
-	ArithmeticError, DispatchError,
+	 SaturatedConversion,
 };
-use sp_std::{collections::btree_set::BTreeSet, prelude::*};
+use sp_std::prelude::*;
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-
-#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
-pub struct LotteryConfig<BlockNumber, Balance> {
-	/// Min Price per entry.
-	min_price: Balance,
-	/// Starting block of the lottery.
-	start: BlockNumber,
-	/// Length of the lottery (start + length = end).
-	length: BlockNumber,
-	/// Delay for choosing the winner of the lottery. (start + length + delay = payout).
-	/// Randomness in the "payout" block will be used to determine the winner.
-	delay: BlockNumber,
-	rate: u8,
-	/// Whether this lottery will repeat after it completes.
-	repeat: bool,
-}
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -136,30 +118,75 @@ pub mod pallet {
 		type MaxUserRewardPerRound: Get<u32>;
 	}
 
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
+	#[scale_info(bounds(), skip_type_params(T))]
+	pub struct LotteryConfig<T: Config> {
+		/// Min Price per entry.
+		min_price: BalanceOf<T>,
+		/// Starting block of the lottery.
+		start: T::BlockNumber,
+		/// Length of the lottery (start + length = end).
+		length: T::BlockNumber,
+		/// Delay for choosing the winner of the lottery. (start + length + delay = payout).
+		/// Randomness in the "payout" block will be used to determine the winner.
+		delay: T::BlockNumber,
+		rate: u8,
+		/// Whether this lottery will repeat after it completes.
+		repeat: bool,
+	}
+
+	impl<T: Config> LotteryConfig<T> {
+		fn from(
+			min_price: BalanceOf<T>,
+			start: T::BlockNumber,
+			length: T::BlockNumber,
+			delay: T::BlockNumber,
+			rate: u8,
+			repeat: bool,
+		) -> Self {
+			LotteryConfig {
+				min_price,
+				start,
+				length,
+				delay,
+				rate,
+				repeat,
+			}
+		}
+	}
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// A lottery has been started!
-		LuckyNumberStarted {
-			index: u32,
+		RoundStarted {
+			round: u32,
 		},
 
 		/// A ticket has been bought!
 		TicketBought {
-			index: u32,
+			round: u32,
 			who: T::AccountId,
 			amount: BalanceOf<T>,
 			number: u8,
 		},
 
-		LuckyNumber {
-			index: u32,
+		RandomNumberGenerated {
+			round: u32,
 			number: u8,
 		},
 
 		RewardClaimed {
+			round: u32,
 			who: T::AccountId,
 			amount: BalanceOf<T>,
+		},
+
+		RewardClaimedFailed {
+			round: u32,
+			who: T::AccountId,
+			amount: BalanceOf<T>,
+			error: sp_runtime::DispatchError,
 		},
 	}
 
@@ -189,8 +216,7 @@ pub mod pallet {
 
 	/// The configuration for the current lottery.
 	#[pallet::storage]
-	pub(crate) type Lottery<T: Config> =
-		StorageValue<_, LotteryConfig<T::BlockNumber, BalanceOf<T>>>;
+	pub(crate) type Lottery<T: Config> = StorageMap<_, Twox64Concat, u32, LotteryConfig<T>>;
 
 	#[pallet::storage]
 	pub(crate) type Participants<T: Config> = StorageMap<
@@ -212,33 +238,50 @@ pub mod pallet {
 
 	/// Total number of tickets sold.
 	#[pallet::storage]
-	pub(crate) type UserPredictionValue<T: Config> =
-		StorageDoubleMap<_, Twox64Concat, u32, Twox64Concat, (T::AccountId, u8), BalanceOf<T>, ValueQuery>;
+	pub(crate) type UserPredictionValue<T: Config> = StorageDoubleMap<
+		_,
+		Twox64Concat,
+		u32,
+		Twox64Concat,
+		(T::AccountId, u8),
+		BalanceOf<T>,
+		ValueQuery,
+	>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(n: T::BlockNumber) -> Weight {
-			let index = LuckyNumberRound::<T>::get();
-			Lottery::<T>::mutate(|mut lottery| -> Weight {
-				if let Some(config) = &mut lottery {
-					if n == config.start && index != 0 {
-						Self::deposit_event(Event::<T>::LuckyNumberStarted {
-							index
-						});
-					}
-					let payout_block = config
-						.start
-						.saturating_add(config.length)
-						.saturating_add(config.delay);
-					if payout_block < n {
-						let number = Self::random_number(index);
-						Self::deposit_event(Event::<T>::LuckyNumber { index, number });
-						LuckyNumberRound::<T>::mutate(|index| *index = index.saturating_add(1));
-						config.start = n;
-					}
+			let round = LuckyNumberRound::<T>::get();
+			let lottery = Lottery::<T>::get(round);
+			if let Some(config) = lottery {
+				if n == config.start && round != 0 {
+					Self::deposit_event(Event::<T>::RoundStarted { round });
 				}
-				T::DbWeight::get().reads(1)
-			});
+				let payout_block = config
+					.start
+					.saturating_add(config.length)
+					.saturating_add(config.delay);
+				if payout_block <= n {
+					let number = Self::random_number(round);
+					Self::deposit_event(Event::<T>::RandomNumberGenerated { round, number });
+					let next_round = round.saturating_add(1);
+					LuckyNumberRound::<T>::put(next_round);
+					Lottery::<T>::insert(
+						next_round,
+						LotteryConfig::from(
+							config.min_price,
+							n,
+							config.length,
+							config.delay,
+							config.rate,
+							config.repeat,
+						),
+					);
+					let winners_from_participants = Participants::<T>::get((round, number));
+					Winners::<T>::insert((round, number), winners_from_participants);
+					Participants::<T>::remove((round, number));
+				}
+			}
 			T::DbWeight::get().reads(1)
 		}
 	}
@@ -264,32 +307,38 @@ pub mod pallet {
 			number: u8,
 		) -> DispatchResult {
 			let caller = ensure_signed(origin.clone())?;
-			let config = Lottery::<T>::get().ok_or(Error::<T>::NotConfigured)?;
-			let index = LuckyNumberRound::<T>::get();
+			let round = LuckyNumberRound::<T>::get();
+			let config = Lottery::<T>::get(round).ok_or(Error::<T>::NotConfigured)?;
 			let block_number = frame_system::Pallet::<T>::block_number();
 			ensure!(
 				block_number < config.start.saturating_add(config.length),
 				Error::<T>::AlreadyEnded
 			);
 
-			Participants::<T>::try_mutate((index, number), |participants| -> DispatchResult {
+			Participants::<T>::try_mutate((round, number), |participants| -> DispatchResult {
 				let check = participants.contains(&caller);
 				match check {
 					false => {
 						participants
 							.try_insert(caller.clone())
 							.map_err(|_| Error::<T>::TooManyParticipants)?;
-						UserPredictionValue::<T>::insert(index, (&caller, number), amount)
+						UserPredictionValue::<T>::insert(round, (&caller, number), amount)
 					}
-					true => UserPredictionValue::<T>::mutate(index, (&caller, number), |v| {
+					true => UserPredictionValue::<T>::mutate(round, (&caller, number), |v| {
 						*v = v.saturating_add(amount)
 					}),
 				}
+				T::Currency::transfer(
+					&caller,
+					&Self::account_id(),
+					amount,
+					ExistenceRequirement::KeepAlive,
+				)?;
 				Ok(())
 			})?;
 
 			Self::deposit_event(Event::<T>::TicketBought {
-				index,
+				round,
 				who: caller.clone(),
 				amount,
 				number,
@@ -320,9 +369,9 @@ pub mod pallet {
 		) -> DispatchResult {
 			T::ManagerOrigin::ensure_origin(origin)?;
 			// Get the current index for the given kind of lottery
-			let index = LuckyNumberRound::<T>::get();
+			let round = LuckyNumberRound::<T>::get();
 			// Attempt to update the lottery with the given kind
-			Lottery::<T>::try_mutate(|lottery| -> DispatchResult {
+			Lottery::<T>::try_mutate(round, |lottery| -> DispatchResult {
 				ensure!(lottery.is_none(), Error::<T>::InProgress);
 				ensure!(rate < 99, Error::<T>::CannotSetRate);
 				let start = frame_system::Pallet::<T>::block_number();
@@ -344,7 +393,50 @@ pub mod pallet {
 				T::Currency::deposit_creating(&lottery_account, T::PotDeposit::get());
 			}
 			// Deposit an event to indicate that the lottery has started
-			Self::deposit_event(Event::<T>::LuckyNumberStarted { index });
+			Self::deposit_event(Event::<T>::RoundStarted { round });
+			Ok(())
+		}
+
+		#[pallet::call_index(2)]
+		#[pallet::weight((10_100, DispatchClass::Normal, Pays::No))]
+		pub fn claim_reward(
+			origin: OriginFor<T>,
+			who: T::AccountId,
+			round: u32,
+			number: u8,
+		) -> DispatchResult {
+			T::ManagerOrigin::ensure_origin(origin)?;
+			<Winners<T>>::try_mutate((round, number), |winners| -> DispatchResult {
+				ensure!(winners.contains(&who), Error::<T>::InvalidCall);
+				let amount = <UserPredictionValue<T>>::get(round, (&who, number));
+				let lottery_config = <Lottery<T>>::get(round).ok_or(Error::<T>::NotConfigured)?;
+				let reward = amount.saturating_mul(lottery_config.rate.saturated_into());
+				match T::Currency::transfer(
+					&Self::account_id(),
+					&who,
+					reward,
+					ExistenceRequirement::KeepAlive,
+				) {
+					Ok(_) => {
+						winners.remove(&who);
+						Self::deposit_event(Event::<T>::RewardClaimed {
+							round,
+							who,
+							amount: reward,
+						});
+					}
+					Err(error) => {
+						Self::deposit_event(Event::<T>::RewardClaimedFailed {
+							round,
+							who,
+							amount: reward,
+							error,
+						});
+					}
+				};
+				Ok(())
+			})?;
+
 			Ok(())
 		}
 	}
@@ -361,13 +453,13 @@ impl<T: Config> Pallet<T> {
 
 	/// Return the pot account and amount of money in the pot.
 	/// The existential deposit is not part of the pot so lottery account never gets deleted.
-	fn pot() -> (T::AccountId, BalanceOf<T>) {
-		let account_id = Self::account_id();
-		let balance =
-			T::Currency::free_balance(&account_id).saturating_sub(T::Currency::minimum_balance());
+	// fn pot() -> (T::AccountId, BalanceOf<T>) {
+	// 	let account_id = Self::account_id();
+	// 	let balance =
+	// 		T::Currency::free_balance(&account_id).saturating_sub(T::Currency::minimum_balance());
 
-		(account_id, balance)
-	}
+	// 	(account_id, balance)
+	// }
 
 	/// Randomly choose a winning ticket and return the account that purchased it.
 	/// The more tickets an account bought, the higher are its chances of winning.
