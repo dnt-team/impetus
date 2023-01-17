@@ -277,6 +277,7 @@ pub mod pallet {
 							config.repeat,
 						),
 					);
+					Self::deposit_event(Event::<T>::RoundStarted { round: next_round });
 					let winners_from_participants = Participants::<T>::get((round, number));
 					Winners::<T>::insert((round, number), winners_from_participants);
 					Participants::<T>::remove((round, number));
