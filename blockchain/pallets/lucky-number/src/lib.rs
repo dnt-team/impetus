@@ -254,9 +254,6 @@ pub mod pallet {
 			let round = LuckyNumberRound::<T>::get();
 			let lottery = Lottery::<T>::get(round);
 			if let Some(config) = lottery {
-				if n == config.start && round != 0 {
-					Self::deposit_event(Event::<T>::RoundStarted { round });
-				}
 				let payout_block = config
 					.start
 					.saturating_add(config.length)
