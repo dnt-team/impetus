@@ -66,7 +66,7 @@ pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{AccountIdConversion, Saturating, Zero},
-	 SaturatedConversion,
+	SaturatedConversion,
 };
 use sp_std::prelude::*;
 
@@ -203,16 +203,12 @@ pub mod pallet {
 		/// The call is not valid for an open lottery.
 		InvalidCall,
 		/// You are already participating in the lottery with this call.
-		AlreadyParticipating,
-		/// Too many calls for a single lottery.
-		TooManyCalls,
-		/// Failed to encode calls
-		EncodingFailed,
+		InvalidNumber,
 		TooManyParticipants,
 	}
 
 	#[pallet::storage]
-	pub(crate) type LuckyNumberRound<T: Config> = StorageValue<_, u32, ValueQuery>;
+	pub(crate) type Round<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	/// The configuration for the current lottery.
 	#[pallet::storage]
@@ -251,7 +247,7 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(n: T::BlockNumber) -> Weight {
-			let round = LuckyNumberRound::<T>::get();
+			let round = Round::<T>::get();
 			let lottery = Lottery::<T>::get(round);
 			if let Some(config) = lottery {
 				let payout_block = config
@@ -261,23 +257,25 @@ pub mod pallet {
 				if payout_block <= n {
 					let number = Self::random_number(round);
 					Self::deposit_event(Event::<T>::RandomNumberGenerated { round, number });
-					let next_round = round.saturating_add(1);
-					LuckyNumberRound::<T>::put(next_round);
-					Lottery::<T>::insert(
-						next_round,
-						LotteryConfig::from(
-							config.min_price,
-							n,
-							config.length,
-							config.delay,
-							config.rate,
-							config.repeat,
-						),
-					);
-					Self::deposit_event(Event::<T>::RoundStarted { round: next_round });
 					let winners_from_participants = Participants::<T>::get((round, number));
 					Winners::<T>::insert((round, number), winners_from_participants);
 					Participants::<T>::remove((round, number));
+					let next_round = round.saturating_add(1);
+					Round::<T>::put(next_round);
+					if config.repeat {
+						Lottery::<T>::insert(
+							next_round,
+							LotteryConfig::from(
+								config.min_price,
+								n,
+								config.length,
+								config.delay,
+								config.rate,
+								config.repeat,
+							),
+						);
+						Self::deposit_event(Event::<T>::RoundStarted { round: next_round });
+					}
 				}
 			}
 			T::DbWeight::get().reads(1)
@@ -305,7 +303,11 @@ pub mod pallet {
 			number: u8,
 		) -> DispatchResult {
 			let caller = ensure_signed(origin.clone())?;
-			let round = LuckyNumberRound::<T>::get();
+			ensure!(
+				number < 100,
+				Error::<T>::InvalidNumber
+			);
+			let round = Round::<T>::get();
 			let config = Lottery::<T>::get(round).ok_or(Error::<T>::NotConfigured)?;
 			let block_number = frame_system::Pallet::<T>::block_number();
 			ensure!(
@@ -341,7 +343,6 @@ pub mod pallet {
 				amount,
 				number,
 			});
-
 			Ok(())
 		}
 
@@ -367,7 +368,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			T::ManagerOrigin::ensure_origin(origin)?;
 			// Get the current index for the given kind of lottery
-			let round = LuckyNumberRound::<T>::get();
+			let round = Round::<T>::get();
 			// Attempt to update the lottery with the given kind
 			Lottery::<T>::try_mutate(round, |lottery| -> DispatchResult {
 				ensure!(lottery.is_none(), Error::<T>::InProgress);
