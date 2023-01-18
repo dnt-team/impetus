@@ -1,16 +1,12 @@
 {
-    "name": "impetus",
-    "private": true,
+    "name": "blockchain",
     "version": "1.0.0",
-    "workspaces": ["blockchain", "hardhat"],
     "scripts": {
-      "blockchain:build": "yarn workspace blockchain build",
-      "blockchain": "yarn workspace blockchain start",
-      "blockchain:debug": "yarn workspace blockchain start:debug",
-      "blockchain:test:evm": "yarn workspace blockchain test:evm",
-      "hardhat:test": "yarn workspace hardhat test",
-      "hardhat:coverage": "yarn workspace hardhat coverage",
-      "hardhat:test:local": "yarn workspace hardhat test:local"
+      "build": "cargo build --release",
+      "build:test:evm": "cargo build --release --no-default-features --features manual-seal,rpc_binary_search_estimate",
+      "start": "target/release/impetus-node --dev --tmp",
+      "start:debug": "RUST_LOG=runtime=debug target/release/impetus-node --dev --tmp --rpc-external --ws-external",
+      "test:evm": "cd ts-tests && yarn test"
     }
   }
   
