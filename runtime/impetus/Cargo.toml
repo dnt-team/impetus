@@ -68,6 +68,7 @@ pallet-randomness-collective-flip = { git = "https://github.com/paritytech/subst
 primitives = {  path = "../../primitives", default-features = false }
 #Precompiles
 pallet-evm-precompile-betting = { path = "../../precompiles/betting", default-features = false }
+pallet-evm-precompile-lucky-number = { path = "../../precompiles/lucky-number", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }

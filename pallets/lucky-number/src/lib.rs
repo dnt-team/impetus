@@ -56,7 +56,7 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-	dispatch::{DispatchResult, Dispatchable, GetDispatchInfo},
+	dispatch::DispatchResult,
 	ensure,
 	pallet_prelude::MaxEncodedLen,
 	traits::{Currency, ExistenceRequirement, Get, Randomness, ReservableCurrency},
@@ -90,12 +90,6 @@ pub mod pallet {
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
 
-		/// A dispatchable call.
-		type RuntimeCall: Parameter
-			+ Dispatchable<RuntimeOrigin = Self::RuntimeOrigin>
-			+ GetDispatchInfo
-			+ From<frame_system::Call<Self>>;
-
 		/// The currency trait.
 		type Currency: ReservableCurrency<Self::AccountId>;
 
@@ -118,41 +112,20 @@ pub mod pallet {
 		type MaxUserRewardPerRound: Get<u32>;
 	}
 
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
-	#[scale_info(bounds(), skip_type_params(T))]
-	pub struct LotteryConfig<T: Config> {
+	#[derive(Encode, Decode, Default, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	pub struct LotteryConfig<BlockNumber, Balance> {
 		/// Min Price per entry.
-		min_price: BalanceOf<T>,
+		min_price: Balance,
 		/// Starting block of the lottery.
-		start: T::BlockNumber,
+		start: BlockNumber,
 		/// Length of the lottery (start + length = end).
-		length: T::BlockNumber,
+		length: BlockNumber,
 		/// Delay for choosing the winner of the lottery. (start + length + delay = payout).
 		/// Randomness in the "payout" block will be used to determine the winner.
-		delay: T::BlockNumber,
+		delay: BlockNumber,
 		rate: u8,
 		/// Whether this lottery will repeat after it completes.
 		repeat: bool,
-	}
-
-	impl<T: Config> LotteryConfig<T> {
-		fn from(
-			min_price: BalanceOf<T>,
-			start: T::BlockNumber,
-			length: T::BlockNumber,
-			delay: T::BlockNumber,
-			rate: u8,
-			repeat: bool,
-		) -> Self {
-			LotteryConfig {
-				min_price,
-				start,
-				length,
-				delay,
-				rate,
-				repeat,
-			}
-		}
 	}
 
 	#[pallet::event]
@@ -212,7 +185,8 @@ pub mod pallet {
 
 	/// The configuration for the current lottery.
 	#[pallet::storage]
-	pub(crate) type Lottery<T: Config> = StorageMap<_, Twox64Concat, u32, LotteryConfig<T>>;
+	pub(crate) type Lottery<T: Config> =
+		StorageMap<_, Twox64Concat, u32, LotteryConfig<T::BlockNumber, BalanceOf<T>>>;
 
 	#[pallet::storage]
 	pub(crate) type Participants<T: Config> = StorageMap<
@@ -265,14 +239,14 @@ pub mod pallet {
 					if config.repeat {
 						Lottery::<T>::insert(
 							next_round,
-							LotteryConfig::from(
-								config.min_price,
-								n,
-								config.length,
-								config.delay,
-								config.rate,
-								config.repeat,
-							),
+							LotteryConfig {
+								min_price: config.min_price,
+								start: n,
+								length: config.length,
+								delay: config.delay,
+								rate: config.rate,
+								repeat: config.repeat,
+							},
 						);
 						Self::deposit_event(Event::<T>::RoundStarted { round: next_round });
 					}
@@ -299,14 +273,11 @@ pub mod pallet {
 		#[pallet::weight((10_100, DispatchClass::Normal, Pays::No))]
 		pub fn buy_ticket(
 			origin: OriginFor<T>,
-			amount: BalanceOf<T>,
 			number: u8,
+			amount: BalanceOf<T>,
 		) -> DispatchResult {
 			let caller = ensure_signed(origin.clone())?;
-			ensure!(
-				number < 100,
-				Error::<T>::InvalidNumber
-			);
+			ensure!(number < 100, Error::<T>::InvalidNumber);
 			let round = Round::<T>::get();
 			let config = Lottery::<T>::get(round).ok_or(Error::<T>::NotConfigured)?;
 			let block_number = frame_system::Pallet::<T>::block_number();

@@ -418,7 +418,6 @@ parameter_types! {
 
 impl pallet_lucky_number::Config for Runtime {
 	type PalletId = LotteryPalletId;
-	type RuntimeCall = RuntimeCall;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	type RuntimeEvent = RuntimeEvent;

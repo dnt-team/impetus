@@ -2916,6 +2916,7 @@ dependencies = [
  "pallet-evm",
  "pallet-evm-chain-id",
  "pallet-evm-precompile-betting",
+ "pallet-evm-precompile-lucky-number",
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
@@ -4574,6 +4575,33 @@ dependencies = [
  "pallet-balances",
  "pallet-betting",
  "pallet-evm",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "precompile-utils",
+ "rustc-hex",
+ "scale-info",
+ "serde",
+ "sha3",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-evm-precompile-lucky-number"
+version = "1.0.0"
+dependencies = [
+ "array-bytes 6.0.0",
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "log",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-lucky-number",
  "pallet-timestamp",
  "parity-scale-codec",
  "precompile-utils",
