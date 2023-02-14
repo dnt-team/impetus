@@ -400,6 +400,85 @@ pub mod pallet {
 				pays_fee: Pays::No,
 			})
 		}
+
+		/// Issue an EVM create operation. The address specified
+		/// will be used as created contract address.
+		#[pallet::call_index(4)]
+		#[pallet::weight({
+			let without_base_extrinsic_weight = true;
+			T::GasWeightMapping::gas_to_weight(*gas_limit, without_base_extrinsic_weight)
+		})]
+		pub fn create_predeploy_contract(
+			origin: OriginFor<T>,
+			address: H160,
+			source: H160,
+			init: Vec<u8>,
+			value: U256,
+			gas_limit: u64,
+			max_fee_per_gas: U256,
+			max_priority_fee_per_gas: Option<U256>,
+			nonce: Option<U256>,
+			access_list: Vec<(H160, Vec<H256>)>,
+		) -> DispatchResultWithPostInfo {
+			T::CallOrigin::ensure_address_origin(&source, origin)?;
+
+			let is_transactional = true;
+			let validate = true;
+			let info = match T::Runner::create_at_address(
+				source,
+				address,
+				init,
+				value,
+				gas_limit,
+				Some(max_fee_per_gas),
+				max_priority_fee_per_gas,
+				nonce,
+				access_list,
+				is_transactional,
+				validate,
+				T::config(),
+			) {
+				Ok(info) => info,
+				Err(e) => {
+					return Err(DispatchErrorWithPostInfo {
+						post_info: PostDispatchInfo {
+							actual_weight: Some(e.weight),
+							pays_fee: Pays::Yes,
+						},
+						error: e.error.into(),
+					})
+				}
+			};
+
+			match info {
+				CreateInfo {
+					exit_reason: ExitReason::Succeed(_),
+					value: create_address,
+					..
+				} => {
+					Pallet::<T>::deposit_event(Event::<T>::Created {
+						address: create_address,
+					});
+				}
+				CreateInfo {
+					exit_reason: _,
+					value: create_address,
+					..
+				} => {
+					Pallet::<T>::deposit_event(Event::<T>::CreatedFailed {
+						address: create_address,
+					});
+				}
+			}
+
+			Ok(PostDispatchInfo {
+				actual_weight: Some(T::GasWeightMapping::gas_to_weight(
+					info.used_gas.unique_saturated_into(),
+					true,
+				)),
+				pays_fee: Pays::No,
+			})
+		}
 	}
 
 	#[pallet::event]

@@ -476,6 +476,54 @@ where
 			},
 		)
 	}
+
+	fn create_at_address(
+		source: H160,
+		address: H160,
+		init: Vec<u8>,
+		value: U256,
+		gas_limit: u64,
+		max_fee_per_gas: Option<U256>,
+		max_priority_fee_per_gas: Option<U256>,
+		nonce: Option<U256>,
+		access_list: Vec<(H160, Vec<H256>)>,
+		is_transactional: bool,
+		validate: bool,
+		config: &evm::Config,
+	) -> Result<CreateInfo, RunnerError<Self::Error>> {
+		if validate {
+			Self::validate(
+				source,
+				Some(address),
+				init.clone(),
+				value,
+				gas_limit,
+				max_fee_per_gas,
+				max_priority_fee_per_gas,
+				nonce,
+				access_list.clone(),
+				is_transactional,
+				config,
+			)?;
+		}
+		let precompiles = T::PrecompilesValue::get();
+		Self::execute(
+			source,
+			value,
+			gas_limit,
+			max_fee_per_gas,
+			max_priority_fee_per_gas,
+			config,
+			&precompiles,
+			is_transactional,
+			|executor| {
+				let address = executor.create_address(evm::CreateScheme::Fixed(address));
+				let (reason, _) =
+					executor.transact_create(source, value, init, gas_limit, access_list);
+				(reason, address)
+			},
+		)
+	}
 }
 
 struct SubstrateStackSubstate<'config> {
