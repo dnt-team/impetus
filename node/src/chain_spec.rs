@@ -7,7 +7,7 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 use impetus_runtime::{AccountId, GenesisConfig, Signature, WASM_BINARY};
-use primitives::pre_deploy_contracts::MULTICALL2_BYTECODE;
+use primitives::pre_deploy_contracts::{ERC1820_REGISTRY, MULTICALL2_BYTECODE};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -214,6 +214,17 @@ fn testnet_genesis(
 					fp_evm::GenesisAccount {
 						balance: U256::zero(),
 						code: hex::decode(MULTICALL2_BYTECODE.trim_end()).unwrap(),
+						nonce: Default::default(),
+						storage: Default::default(),
+					},
+				);
+				map.insert(
+					// H160 address of 1820 registry
+					H160::from_str("1820a4B7618BdE71Dce8cdc73aAB6C95905faD24")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						balance: U256::zero(),
+						code: hex::decode(ERC1820_REGISTRY.trim_end()).unwrap(),
 						nonce: Default::default(),
 						storage: Default::default(),
 					},
