@@ -2857,6 +2857,7 @@ dependencies = [
  "frame-benchmarking-cli",
  "frame-system",
  "futures",
+ "hex",
  "impetus-runtime",
  "jsonrpsee",
  "log",

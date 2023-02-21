@@ -20,6 +20,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod assets;
+pub mod pre_deploy_contracts;
 pub mod lottery;
 
 use sp_runtime::{
