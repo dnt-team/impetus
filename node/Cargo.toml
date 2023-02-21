@@ -12,10 +12,10 @@ publish = false
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-array-bytes = "6.0.0"
 async-trait = "0.1"
 clap = { version = "4.0", features = ["derive"] }
 futures = "0.3.25"
+hex = "0.4.3"
 log = "0.4.17"
 
 # Parity

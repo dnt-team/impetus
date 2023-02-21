@@ -2840,7 +2840,6 @@ dependencies = [
 name = "impetus-node"
 version = "0.0.0"
 dependencies = [
- "array-bytes 6.0.0",
  "async-trait",
  "clap",
  "fc-cli",
@@ -2858,6 +2857,7 @@ dependencies = [
  "frame-benchmarking-cli",
  "frame-system",
  "futures",
+ "hex",
  "impetus-runtime",
  "jsonrpsee",
  "log",
