@@ -13,7 +13,7 @@ Complete the [basic Yarn setup instructions](https://classic.yarnpkg.com/lang/en
 Use Rust's native `cargo` command to build and launch the impetus node:
 
 ```sh
-yarn blockchain:start
+yarn start
 ```
 
 ### Build
@@ -22,7 +22,7 @@ The `cargo run` command will perform an initial build. Use the following command
 without launching it:
 
 ```sh
-yarn blockchain:build
+yarn build
 ```
 
 ### Embedded Docs
@@ -45,5 +45,5 @@ node.
 Start the development chain with detailed logging:
 
 ```bash
-yarn blockchain:debug
+yarn start:debug
 ```
