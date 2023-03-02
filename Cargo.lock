@@ -2837,7 +2837,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "impetus-node"
+name = "impetus"
 version = "0.0.0"
 dependencies = [
  "async-trait",

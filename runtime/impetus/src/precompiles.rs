@@ -18,7 +18,7 @@ where
 	pub fn new() -> Self {
 		Self(Default::default())
 	}
-	pub fn used_addresses() -> [H160; 7] {
+	pub fn used_addresses() -> [H160; 9] {
 		[
 			hash(1),
 			hash(2),
@@ -27,6 +27,8 @@ where
 			hash(5),
 			hash(1024),
 			hash(1025),
+			hash(2051),
+			hash(2052),
 		]
 	}
 }
