@@ -78,6 +78,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{pallet_prelude::*, BoundedBTreeSet};
 	use frame_system::pallet_prelude::*;
+use log::info;
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -100,7 +101,7 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// The manager origin.
-		type ManagerOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+		type ManagerOrigin: EnsureOrigin<Self::RuntimeOrigin, Success = Self::AccountId>;
 
 		#[pallet::constant]
 		type PotDeposit: Get<BalanceOf<Self>>;
@@ -337,8 +338,10 @@ pub mod pallet {
 			rate: u8,
 			repeat: bool,
 		) -> DispatchResult {
+			info!("123");
 			T::ManagerOrigin::ensure_origin(origin)?;
 			// Get the current index for the given kind of lottery
+			info!("456");
 			let round = Round::<T>::get();
 			// Attempt to update the lottery with the given kind
 			Lottery::<T>::try_mutate(round, |lottery| -> DispatchResult {

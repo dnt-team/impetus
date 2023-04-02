@@ -416,12 +416,31 @@ parameter_types! {
 	pub const MaxUserRewardPerRound: u32 = 256;
 }
 
+parameter_types! {
+	pub const TechnicalMotionDuration: BlockNumber = 5 * DAYS;
+	pub const TechnicalMaxProposals: u32 = 100;
+	pub const TechnicalMaxMembers: u32 = 100;
+}
+
+type ManagerCollective = pallet_collective::Instance2;
+
+impl pallet_collective::Config<ManagerCollective> for Runtime {
+	type RuntimeOrigin = RuntimeOrigin;
+	type Proposal = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type MotionDuration = TechnicalMotionDuration;
+	type MaxProposals = TechnicalMaxProposals;
+	type MaxMembers = TechnicalMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+}
+
 impl pallet_lucky_number::Config for Runtime {
 	type PalletId = LotteryPalletId;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	type RuntimeEvent = RuntimeEvent;
-	type ManagerOrigin = EnsureRoot<AccountId>;
+	type ManagerOrigin = pallet_collective::EnsureMember<AccountId, ManagerCollective>;
 	type PotDeposit = PotDeposit;
 	type MaxUserRewardPerRound = MaxUserRewardPerRound;
 	type MaxSet = MaxParticipants;
@@ -451,6 +470,7 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>},
 		Betting: pallet_betting::{Pallet, Call, Storage, Event<T>},
 		LuckyNumber: pallet_lucky_number,
+		ManagerCommittee: pallet_collective::<Instance2>,
 	}
 );
 
