@@ -338,10 +338,8 @@ use log::info;
 			rate: u8,
 			repeat: bool,
 		) -> DispatchResult {
-			info!("123");
 			T::ManagerOrigin::ensure_origin(origin)?;
 			// Get the current index for the given kind of lottery
-			info!("456");
 			let round = Round::<T>::get();
 			// Attempt to update the lottery with the given kind
 			Lottery::<T>::try_mutate(round, |lottery| -> DispatchResult {
