@@ -6,7 +6,7 @@ use sp_core::{sr25519, Pair, Public, H160, U256};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
-use impetus_runtime::{AccountId, GenesisConfig, Signature, WASM_BINARY};
+use impetus_runtime::{AccountId, GenesisConfig, ManagerCommitteeConfig, Signature, WASM_BINARY};
 use primitives::pre_deploy_contracts::{ERC1820_REGISTRY, MULTICALL2_BYTECODE};
 
 // The URL for the telemetry server.
@@ -141,6 +141,8 @@ fn testnet_genesis(
 		SystemConfig,
 	};
 
+	let num_endowed_accounts = endowed_accounts.len();
+
 	GenesisConfig {
 		// System
 		system: SystemConfig {
@@ -160,6 +162,14 @@ fn testnet_genesis(
 				.cloned()
 				.map(|k| (k, 1 << 60))
 				.collect(),
+		},
+		manager_committee: ManagerCommitteeConfig {
+			members: endowed_accounts
+				.iter()
+				.take((num_endowed_accounts + 1) / 2)
+				.cloned()
+				.collect(),
+			phantom: Default::default(),
 		},
 		transaction_payment: Default::default(),
 

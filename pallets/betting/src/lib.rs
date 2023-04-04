@@ -213,11 +213,8 @@ pub mod pallet {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
-			log::info!("1");
 			T::ForceOrigin::ensure_origin(origin.clone())?;
-			log::info!("2");
 			let who = T::Lookup::lookup(who)?;
-			log::info!("3");
 			ensure!(id.len() <= 100, <Error<T>>::CidReachedMaxSize);
 			ensure!(
 				duration > Zero::zero(),
