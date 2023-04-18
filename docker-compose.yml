@@ -2,9 +2,8 @@ version: '3.8'
 
 services:
   impetus:
-    # image: impetus:latest
+    image: impetusbet/impetus:latest
     container_name: Impetus
-    build: .
     ports:
       - 9933:9933
       - 9944:9944
