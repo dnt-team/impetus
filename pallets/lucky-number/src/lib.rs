@@ -283,10 +283,9 @@ use log::info;
 			let config = Lottery::<T>::get(round).ok_or(Error::<T>::NotConfigured)?;
 			let block_number = frame_system::Pallet::<T>::block_number();
 			ensure!(
-				block_number < config.start.saturating_add(config.length),
+				block_number <= config.start.saturating_add(config.length),
 				Error::<T>::AlreadyEnded
 			);
-
 			Participants::<T>::try_mutate((round, number), |participants| -> DispatchResult {
 				let check = participants.contains(&caller);
 				match check {
@@ -407,7 +406,6 @@ use log::info;
 				};
 				Ok(())
 			})?;
-
 			Ok(())
 		}
 	}
