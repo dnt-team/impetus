@@ -5,8 +5,7 @@ use sp_std::marker::PhantomData;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
-// Extra
-use pallet_evm_precompile_betting::BettingPrecompile;
+use pallet_evm_precompile_batch::BatchPrecompile;
 use pallet_evm_precompile_lucky_number::LuckyNumberPrecompile;
 
 pub struct FrontierPrecompiles<R>(PhantomData<R>);
@@ -27,16 +26,16 @@ where
 			hash(5),
 			hash(1024),
 			hash(1025),
-			hash(2051),
 			hash(2052),
+			hash(2056),
 		]
 	}
 }
 impl<R> PrecompileSet for FrontierPrecompiles<R>
 where
-	BettingPrecompile<R>: Precompile,
-	LuckyNumberPrecompile<R>: Precompile,
 	R: pallet_evm::Config,
+	BatchPrecompile<R>: Precompile,
+	LuckyNumberPrecompile<R>: Precompile,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
@@ -49,8 +48,8 @@ where
 			// Non-Frontier specific nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(handle)),
-			a if a == hash(2051) => Some(BettingPrecompile::execute(handle)),
 			a if a == hash(2052) => Some(LuckyNumberPrecompile::execute(handle)),
+			a if a == hash(2056) => Some(BatchPrecompile::execute(handle)),
 			_ => None,
 		}
 	}

@@ -54,7 +54,7 @@
 // mod tests;
 // pub mod weights;
 
-use codec::{Decode, Encode};
+use scale_codec::{Decode, Encode};
 use frame_support::{
 	dispatch::DispatchResult,
 	ensure,
@@ -78,10 +78,9 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{pallet_prelude::*, BoundedBTreeSet};
 	use frame_system::pallet_prelude::*;
-use log::info;
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
+	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	/// The pallet's config trait.
