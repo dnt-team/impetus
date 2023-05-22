@@ -17,7 +17,7 @@ COPY . .
 RUN cargo build --locked --release
 
 # This is the second stage: the final image
-FROM debian:buster-slim
+FROM ubuntu:focal
 
 # Set the working directory and copy the binary from the previous stage
 WORKDIR /impetus
