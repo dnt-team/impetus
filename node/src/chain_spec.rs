@@ -12,7 +12,7 @@ use sp_state_machine::BasicExternalities;
 use frontier_template_runtime::{
 	AccountId, EnableManualSeal, GenesisConfig, SS58Prefix, Signature, WASM_BINARY, ManagerCommitteeConfig
 };
-use commons::pre_deploy_contracts::{ERC1820_REGISTRY, MULTICALL2_BYTECODE};
+use commons::pre_deploy_contracts::{ERC1820_REGISTRY, MULTICALL2_BYTECODE, MULTICALL3_BYTECODE};
 
 
 // The URL for the telemetry server.
@@ -257,6 +257,17 @@ fn testnet_genesis(
 					fp_evm::GenesisAccount {
 						balance: U256::zero(),
 						code: hex::decode(MULTICALL2_BYTECODE.trim_end()).unwrap(),
+						nonce: Default::default(),
+						storage: Default::default(),
+					},
+				);
+				map.insert(
+					// H160 address of multicall3
+					H160::from_str("cA11bde05977b3631167028862bE2a173976CA11")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						balance: U256::zero(),
+						code: hex::decode(MULTICALL3_BYTECODE.trim_end()).unwrap(),
 						nonce: Default::default(),
 						storage: Default::default(),
 					},
