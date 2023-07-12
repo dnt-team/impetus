@@ -9,7 +9,7 @@ use sp_core::{sr25519, storage::Storage, Pair, Public, H160, U256};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use sp_state_machine::BasicExternalities;
 // Frontier
-use frontier_template_runtime::{
+use impetus_runtime::{
 	AccountId, EnableManualSeal, GenesisConfig, SS58Prefix, Signature, WASM_BINARY, ManagerCommitteeConfig
 };
 use commons::pre_deploy_contracts::{ERC1820_REGISTRY, MULTICALL2_BYTECODE, MULTICALL3_BYTECODE};
@@ -177,7 +177,7 @@ fn testnet_genesis(
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	chain_id: u64,
 ) -> GenesisConfig {
-	use frontier_template_runtime::{
+	use impetus_runtime::{
 		AuraConfig, BalancesConfig, EVMChainIdConfig, EVMConfig, GrandpaConfig, SudoConfig,
 		SystemConfig,
 	};

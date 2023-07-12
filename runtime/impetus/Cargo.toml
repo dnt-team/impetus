@@ -1,5 +1,5 @@
 [package]
-name = "frontier-template-runtime"
+name = "impetus-runtime"
 version = "0.0.0"
 license = "Unlicense"
 description = "A fresh FRAME-based Substrate runtime, ready for hacking."
@@ -99,7 +99,7 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"frame-system-rpc-runtime-api/std",
-	"frame-system-benchmarking/std",
+	"frame-system-benchmarking?/std",
 	"pallet-aura/std",
 	"pallet-balances/std",
 	"pallet-grandpa/std",

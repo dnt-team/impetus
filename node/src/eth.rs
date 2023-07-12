@@ -20,7 +20,7 @@ use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::{EthTask, OverrideHandle};
 pub use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 // Local
-use frontier_template_runtime::opaque::Block;
+use impetus_runtime::opaque::Block;
 
 use crate::client::{FullBackend, FullClient};
 
