@@ -3,14 +3,16 @@ use std::{collections::BTreeMap, str::FromStr};
 use serde::{Deserialize, Serialize};
 // Substrate
 use sc_chain_spec::{ChainType, Properties};
-use sp_consensus_aura::sr25519::{AuthorityId as AuraId};
+use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
+#[allow(unused_imports)]
+use sp_core::ecdsa;
 use sp_core::{sr25519, storage::Storage, Pair, Public, H160, U256};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use sp_state_machine::BasicExternalities;
 // Frontier
 use impetus_runtime::{
-	AccountId, EnableManualSeal, GenesisConfig, SS58Prefix, Signature, WASM_BINARY, ManagerCommitteeConfig
+	AccountId, Balance, EnableManualSeal, GenesisConfig, SS58Prefix, Signature, WASM_BINARY, ManagerCommitteeConfig
 };
 use commons::pre_deploy_contracts::{ERC1820_REGISTRY, MULTICALL2_BYTECODE, MULTICALL3_BYTECODE};
 
@@ -51,9 +53,12 @@ pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Pu
 		.public()
 }
 
+#[allow(dead_code)]
 type AccountPublic = <Signature as Verify>::Signer;
 
 /// Generate an account ID from seed.
+/// For use with `AccountId32`, `dead_code` if `AccountId20`.
+#[allow(dead_code)]
 pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
 where
 	AccountPublic: From<<TPublic::Pair as Pair>::Public>,
@@ -72,6 +77,8 @@ fn properties() -> Properties {
 	properties.insert("ss58Format".into(), SS58Prefix::get().into());
 	properties
 }
+
+const UNITS: Balance = 1_000_000_000_000_000_000;
 
 pub fn development_config(enable_manual_seal: Option<bool>) -> DevChainSpec {
 	let wasm_binary = WASM_BINARY.expect("WASM not available");
@@ -161,6 +168,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		None,
 		// Protocol ID
 		None,
+		// Fork ID
 		None,
 		// Properties
 		None,
@@ -197,11 +205,10 @@ fn testnet_genesis(
 
 		// Monetary
 		balances: BalancesConfig {
-			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts
 				.iter()
 				.cloned()
-				.map(|k| (k, 1 << 80))
+				.map(|k| (k, 1_000_000 * UNITS))
 				.collect(),
 		},
 		transaction_payment: Default::default(),
