@@ -201,7 +201,7 @@ pub mod pallet {
 	pub(crate) type Winners<T: Config> = StorageMap<
 		_,
 		Twox64Concat,
-		(u32, u8),
+		u32,
 		BoundedBTreeSet<T::AccountId, T::MaxSet>,
 		ValueQuery,
 	>;
@@ -232,7 +232,7 @@ pub mod pallet {
 					let number = Self::random_number(round);
 					Self::deposit_event(Event::<T>::RandomNumberGenerated { round, number });
 					let winners_from_participants = Participants::<T>::get((round, number));
-					Winners::<T>::insert((round, number), winners_from_participants);
+					Winners::<T>::insert(round, winners_from_participants);
 					Participants::<T>::remove((round, number));
 					let next_round = round.saturating_add(1);
 					Round::<T>::put(next_round);
@@ -375,7 +375,7 @@ pub mod pallet {
 			number: u8,
 		) -> DispatchResult {
 			T::ManagerOrigin::ensure_origin(origin)?;
-			<Winners<T>>::try_mutate((round, number), |winners| -> DispatchResult {
+			<Winners<T>>::try_mutate(round, |winners| -> DispatchResult {
 				ensure!(winners.contains(&who), Error::<T>::InvalidCall);
 				let amount = <UserPredictionValue<T>>::get(round, (&who, number));
 				let lottery_config = <Lottery<T>>::get(round).ok_or(Error::<T>::NotConfigured)?;
