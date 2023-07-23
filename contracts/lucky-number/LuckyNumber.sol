@@ -16,5 +16,5 @@ LuckyNumber constant LUCKY_NUMBER_CONTRACT = LuckyNumber(LUCKY_NUMBER_ADDRESS);
 /// wraps the pallet
 /// @custom:address 0x0000000000000000000000000000000000000804
 interface LuckyNumber {
-    function buyTicket(uint8 number, uint256 amount) external;
+    function buyTicket(uint8[] calldata numbers, uint256[] calldata amounts) external;
 }
