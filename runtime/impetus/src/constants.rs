@@ -12,7 +12,7 @@ pub mod currency {
 
 /// Time.
 pub mod time {
-	use commons::{data_type::{BlockNumber, Moment}};
+	use commons::data_type::{BlockNumber, Moment};
 
 
 	/// Since BABE is probabilistic this is the average expected block time that

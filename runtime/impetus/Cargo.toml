@@ -65,6 +65,7 @@ pallet-lucky-number = { workspace = true }
 precompile-utils = { workspace = true }
 pallet-evm-precompile-batch = { workspace = true }
 pallet-evm-precompile-lucky-number = { workspace = true }
+log = { workspace = true }
 
 [dev-dependencies]
 precompile-utils = { workspace = true, features = [ "std", "testing" ] }
