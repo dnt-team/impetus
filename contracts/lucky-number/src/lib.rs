@@ -33,7 +33,7 @@ where
 	Runtime::RuntimeCall: From<pallet_lucky_number::Call<Runtime>>,
 	BalanceOf<Runtime>: TryFrom<U256> + Into<U256>,
 {
-	#[precompile::public("buyTicket(uint8[],uint256[])")]
+	#[precompile::public("buyTickets(uint8[],uint256[])")]
 	fn buy_ticket(
 		handle: &mut impl PrecompileHandle,
 		numbers: BoundedVec<u8, GetArrayLimit>,
