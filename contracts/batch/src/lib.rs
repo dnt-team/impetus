@@ -25,6 +25,11 @@ use precompile_utils::{evm::costs::call_cost, prelude::*};
 use sp_core::{H160, U256};
 use sp_std::{iter::repeat, marker::PhantomData, vec, vec::Vec};
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Mode {
 	BatchSome,             // = "batchSome(address[],uint256[],bytes[],uint64[])",

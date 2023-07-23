@@ -272,48 +272,50 @@ pub mod pallet {
 		#[pallet::call_index(0)]
 		#[pallet::weight((10_100, DispatchClass::Normal, Pays::No))]
 		pub fn buy_ticket(
-			origin: OriginFor<T>,
-			number: u8,
-			amount: BalanceOf<T>,
+				origin: OriginFor<T>,
+				selections: Vec<(u8, BalanceOf<T>)>,
 		) -> DispatchResult {
-			let caller = ensure_signed(origin.clone())?;
-			ensure!(number < 100, Error::<T>::InvalidNumber);
-			let round = Round::<T>::get();
-			let config = Lottery::<T>::get(round).ok_or(Error::<T>::NotConfigured)?;
-			let block_number = frame_system::Pallet::<T>::block_number();
-			ensure!(
-				block_number <= config.start.saturating_add(config.length),
-				Error::<T>::AlreadyEnded
-			);
-			Participants::<T>::try_mutate((round, number), |participants| -> DispatchResult {
-				let check = participants.contains(&caller);
-				match check {
-					false => {
-						participants
-							.try_insert(caller.clone())
-							.map_err(|_| Error::<T>::TooManyParticipants)?;
-						UserPredictionValue::<T>::insert(round, (&caller, number), amount)
-					}
-					true => UserPredictionValue::<T>::mutate(round, (&caller, number), |v| {
-						*v = v.saturating_add(amount)
-					}),
+				let caller = ensure_signed(origin.clone())?;
+				ensure!(selections.len() < 100, Error::<T>::InvalidNumber);
+				let (numbers, amounts): (Vec<u8>, Vec<BalanceOf<T>>) = selections.iter().cloned().unzip();
+				ensure!(numbers.iter().all(|&number| number < 100), Error::<T>::InvalidNumber);
+				let round = Round::<T>::get();
+				let config = Lottery::<T>::get(round).ok_or(Error::<T>::NotConfigured)?;
+				let block_number = frame_system::Pallet::<T>::block_number();
+				ensure!(
+						block_number <= config.start.saturating_add(config.length),
+						Error::<T>::AlreadyEnded
+				);
+				for (number, amount) in numbers.iter().zip(amounts.iter()) {
+						Participants::<T>::try_mutate((round, *number), |participants| -> DispatchResult {
+								let check = participants.contains(&caller);
+								match check {
+										false => {
+												participants
+														.try_insert(caller.clone())
+														.map_err(|_| Error::<T>::TooManyParticipants)?;
+												UserPredictionValue::<T>::insert(round, (&caller, *number), *amount)
+										}
+										true => UserPredictionValue::<T>::mutate(round, (&caller, *number), |v| {
+												*v = v.saturating_add(*amount)
+										}),
+								}
+								T::Currency::transfer(
+										&caller,
+										&Self::account_id(),
+										*amount,
+										ExistenceRequirement::KeepAlive,
+								)?;
+								Ok(())
+						})?;
+						Self::deposit_event(Event::<T>::TicketBought {
+							round,
+							who: caller.clone(),
+							amount: *amount,
+							number: *number,
+					});
 				}
-				T::Currency::transfer(
-					&caller,
-					&Self::account_id(),
-					amount,
-					ExistenceRequirement::KeepAlive,
-				)?;
 				Ok(())
-			})?;
-
-			Self::deposit_event(Event::<T>::TicketBought {
-				round,
-				who: caller.clone(),
-				amount,
-				number,
-			});
-			Ok(())
 		}
 
 		/// Start a lottery using the provided configuration.

@@ -42,16 +42,43 @@ where
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
 			// Ethereum precompiles :
-			a if a == hash(1) => Some(ECRecover::execute(handle)),
-			a if a == hash(2) => Some(Sha256::execute(handle)),
-			a if a == hash(3) => Some(Ripemd160::execute(handle)),
-			a if a == hash(4) => Some(Identity::execute(handle)),
-			a if a == hash(5) => Some(Modexp::execute(handle)),
+			a if a == hash(1) => {
+				log::info!("pre1 {:?}", a);
+				Some(ECRecover::execute(handle))
+			}
+			a if a == hash(2) => {
+				log::info!("pre2 {:?}", a);
+				Some(Sha256::execute(handle))
+			}
+			a if a == hash(3) => {
+				log::info!("pre3 {:?}", a);
+				Some(Ripemd160::execute(handle))
+			}
+			a if a == hash(4) => {
+				log::info!("pre4 {:?}", a);
+				Some(Identity::execute(handle))
+			}
+			a if a == hash(5) => {
+				log::info!("pre5 {:?}", a);
+				Some(Modexp::execute(handle))
+			}
 			// Non-Frontier specific nor Ethereum precompiles :
-			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
-			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(handle)),
-			a if a == hash(2052) => Some(LuckyNumberPrecompile::execute(handle)),
-			a if a == hash(2056) => Some(BatchPrecompile::execute(handle)),
+			a if a == hash(1024) => {
+				log::info!("pre6 {:?}", a);
+				Some(Sha3FIPS256::execute(handle))
+			}
+			a if a == hash(1025) => {
+				log::info!("pre7 {:?}", a);
+				Some(ECRecoverPublicKey::execute(handle))
+			}
+			a if a == hash(2052) => {
+				log::info!("pre8 {:?}", a);
+				Some(LuckyNumberPrecompile::execute(handle))
+			}
+			a if a == hash(2056) => {
+				log::info!("pre9 {:?}", a);
+				Some(BatchPrecompile::execute(handle))
+			}
 			_ => None,
 		}
 	}
