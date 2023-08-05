@@ -62,6 +62,8 @@ commons = { workspace = true }
 pallet-collective = { workspace = true }
 pallet-insecure-randomness-collective-flip = { workspace = true }
 pallet-lucky-number = { workspace = true }
+pallet-did = { workspace = true }
+pallet-utility = { workspace = true }
 precompile-utils = { workspace = true }
 pallet-evm-precompile-batch = { workspace = true }
 pallet-evm-precompile-lucky-number = { workspace = true }
@@ -103,9 +105,11 @@ std = [
 	"frame-system-benchmarking?/std",
 	"pallet-aura/std",
 	"pallet-balances/std",
+	"pallet-did/std",
 	"pallet-grandpa/std",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
+	"pallet-utility/std",
 	"pallet-transaction-payment/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	# Frontier
