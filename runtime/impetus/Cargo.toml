@@ -63,6 +63,9 @@ pallet-collective = { workspace = true }
 pallet-insecure-randomness-collective-flip = { workspace = true }
 pallet-lucky-number = { workspace = true }
 pallet-did = { workspace = true }
+pallet-ocw-giveaway = { workspace = true }
+pallet-nfts = { workspace = true }
+pallet-uniques = { workspace = true }
 pallet-utility = { workspace = true }
 precompile-utils = { workspace = true }
 pallet-evm-precompile-batch = { workspace = true }
@@ -131,6 +134,8 @@ std = [
 	# "pallet-assets/std",
 	"pallet-collective/std",
 	"pallet-insecure-randomness-collective-flip/std",
+	"pallet-uniques/std",
+	"pallet-nfts/std",
 	"pallet-evm-precompile-batch/std",
 	"pallet-evm-precompile-lucky-number/std",
 ]

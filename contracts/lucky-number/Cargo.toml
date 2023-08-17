@@ -8,7 +8,7 @@ version = "1.0.0"
 [dependencies]
 array-bytes = "6.0.0"
 log = "0.4"
-num_enum = { version = "0.5.3", default-features = false }
+num_enum = { workspace = true }
 rustc-hex = { version = "2.0.1", default-features = false }
 
 # Impetus

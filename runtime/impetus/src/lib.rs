@@ -10,7 +10,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_system::{limits::BlockWeights, EnsureRoot};
+use frame_system::{limits::BlockWeights, EnsureRoot, EnsureSigned,};
 use scale_codec::{Decode, Encode};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -22,8 +22,9 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable, Get,
-		NumberFor, PostDispatchInfoOf, UniqueSaturatedInto,
+		NumberFor, PostDispatchInfoOf, UniqueSaturatedInto, Verify, self
 	},
+	generic::Era, SaturatedConversion,
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, ConsensusEngineId, Perbill, Permill,
 };
@@ -38,7 +39,7 @@ use frame_support::{
 	construct_runtime, 
 	dispatch::DispatchClass,
 	parameter_types,
-	traits::{ConstU32, ConstU8, FindAuthor, OnFinalize, OnTimestampSet},
+	traits::{ AsEnsureOriginWithArg, ConstU32, ConstU8, FindAuthor, OnFinalize, OnTimestampSet},
 	weights::{constants::{BlockExecutionWeight, ExtrinsicBaseWeight, WEIGHT_REF_TIME_PER_MILLIS}, ConstantMultiplier, IdentityFee, Weight},
 	PalletId,
 };
@@ -53,6 +54,7 @@ use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTra
 use pallet_evm::{
 	Account as EVMAccount, EnsureAddressTruncated, FeeCalculator, HashedAddressMapping, Runner,
 };
+use pallet_nfts::PalletFeatures;
 
 // A few exports that help ease life for downstream crates.
 pub use frame_system::Call as SystemCall;
@@ -424,7 +426,6 @@ impl pallet_collective::Config<ManagerCollective> for Runtime {
 
 parameter_types! {
 	pub const LotteryPalletId: PalletId = PalletId(*b"plottery");
-	pub const MaxGenerateRandom: u32 = 10;
 	pub const MaxParticipants: u32 = u32::MAX / 2;
 	pub const PotDeposit: Balance =  1000 * DOLLARS;
 	pub const MaxUserRewardPerRound: u32 = 256;
@@ -440,6 +441,150 @@ impl pallet_lucky_number::Config for Runtime {
 	type MaxUserRewardPerRound = MaxUserRewardPerRound;
 	type MaxSet = MaxParticipants;
 }
+
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+    RuntimeCall: From<LocalCall>,
+{
+    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		   call: RuntimeCall,
+       public: <Signature as Verify>::Signer,
+	     account: AccountId,
+	     nonce: Index,
+     ) -> Option<(RuntimeCall, <UncheckedExtrinsic as traits::Extrinsic>::SignaturePayload)> {
+	     let tip = 0;
+	     // take the biggest period possible.
+	     let period =
+		      BlockHashCount::get().checked_next_power_of_two().map(|c| c / 2).unwrap_or(2) as u64;
+	     let current_block = System::block_number()
+		      .saturated_into::<u64>()
+		      // The `System::block_number` is initialized with `n+1`,
+		      // so the actual block number is `n`.
+		      .saturating_sub(1);
+	     let era = Era::mortal(period, current_block);
+	     let extra = (
+		      frame_system::CheckNonZeroSender::<Runtime>::new(),
+		      frame_system::CheckSpecVersion::<Runtime>::new(),
+		      frame_system::CheckTxVersion::<Runtime>::new(),
+		      frame_system::CheckGenesis::<Runtime>::new(),
+		      frame_system::CheckEra::<Runtime>::from(era),
+		      frame_system::CheckNonce::<Runtime>::from(nonce),
+		      frame_system::CheckWeight::<Runtime>::new(),
+		      pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+	     );
+	     let raw_payload = SignedPayload::new(call, extra)
+		      .map_err(|e| {
+			       log::warn!("Unable to create signed payload: {:?}", e);
+		      })
+		      .ok()?;
+	     let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+	     let address = account;
+	     let (call, extra, _) = raw_payload.deconstruct();
+	     Some((call, (sp_runtime::MultiAddress::Id(address), signature, extra)))
+   }
+}
+
+impl frame_system::offchain::SigningTypes for Runtime {
+	type Public = <Signature as traits::Verify>::Signer;
+	type Signature = Signature;
+}
+
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+	RuntimeCall: From<C>,
+{
+	type Extrinsic = UncheckedExtrinsic;
+	type OverarchingCall = RuntimeCall;
+}
+
+parameter_types! {
+	pub const GiveAwayPalletId: PalletId = PalletId(*b"giveaway");
+}
+
+impl pallet_ocw_giveaway::Config for Runtime {
+	type PalletId = GiveAwayPalletId;
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type Randomness = RandomnessCollectiveFlip;
+	type ManagerOrigin = pallet_collective::EnsureMember<AccountId, ManagerCollective>;
+	type PotDeposit = PotDeposit;
+	type MaxSet = MaxParticipants;
+	type NftCollectionId = <Self as pallet_nfts::Config>::CollectionId;
+	type NftId = <Self as pallet_nfts::Config>::ItemId;
+	type Nfts = Nfts;
+	type AuthorityId = pallet_ocw_giveaway::crypto::TestAuthId;
+}
+
+parameter_types! {
+	pub const CollectionDeposit: Balance = 100 * DOLLARS;
+	pub const ItemDeposit: Balance = 1 * DOLLARS;
+	pub const KeyLimit: u32 = 32;
+	pub const ValueLimit: u32 = 256;
+	pub const ApprovalsLimit: u32 = 20;
+	pub const ItemAttributesApprovalsLimit: u32 = 20;
+	pub const MaxTips: u32 = 10;
+	pub const MaxDeadlineDuration: BlockNumber = 12 * 30 * DAYS;
+	pub const StringLimit: u32 = 50;
+	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
+	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+}
+
+impl pallet_uniques::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type CollectionId = u32;
+	type ItemId = u32;
+	type Currency = Balances;
+	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+	type CollectionDeposit = CollectionDeposit;
+	type ItemDeposit = ItemDeposit;
+	type MetadataDepositBase = MetadataDepositBase;
+	type AttributeDepositBase = MetadataDepositBase;
+	type DepositPerByte = MetadataDepositPerByte;
+	type StringLimit = StringLimit;
+	type KeyLimit = KeyLimit;
+	type ValueLimit = ValueLimit;
+	type WeightInfo = pallet_uniques::weights::SubstrateWeight<Runtime>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type Helper = ();
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type Locker = ();
+}
+
+parameter_types! {
+	pub Features: PalletFeatures = PalletFeatures::all_enabled();
+	pub const MaxAttributesPerCall: u32 = 10;
+}
+
+impl pallet_nfts::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type CollectionId = u32;
+	type ItemId = u32;
+	type Currency = Balances;
+	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+	type CollectionDeposit = CollectionDeposit;
+	type ItemDeposit = ItemDeposit;
+	type MetadataDepositBase = MetadataDepositBase;
+	type AttributeDepositBase = MetadataDepositBase;
+	type DepositPerByte = MetadataDepositPerByte;
+	type StringLimit = StringLimit;
+	type KeyLimit = KeyLimit;
+	type ValueLimit = ValueLimit;
+	type ApprovalsLimit = ApprovalsLimit;
+	type ItemAttributesApprovalsLimit = ItemAttributesApprovalsLimit;
+	type MaxTips = MaxTips;
+	type MaxDeadlineDuration = MaxDeadlineDuration;
+	type MaxAttributesPerCall = MaxAttributesPerCall;
+	type Features = Features;
+	type OffchainSignature = Signature;
+	type OffchainPublic = <Signature as traits::Verify>::Signer;
+	type WeightInfo = pallet_nfts::weights::SubstrateWeight<Runtime>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type Helper = ();
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type Locker = ();
+}
+
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -464,6 +609,9 @@ construct_runtime!(
 		RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
 		LuckyNumber: pallet_lucky_number,
 		Did: pallet_did,
+		GiveAway: pallet_ocw_giveaway,
+		Uniques: pallet_uniques,
+		Nfts: pallet_nfts,
 		Utility: pallet_utility,
 		ManagerCommittee: pallet_collective::<Instance1>,
 	}

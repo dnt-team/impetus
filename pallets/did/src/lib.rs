@@ -35,7 +35,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn external_id)]
 	pub type ExternalIdAddress<T: Config> =
-		StorageMap<_, Twox64Concat, T::AccountId, (Provider, ExternalId), ValueQuery>;
+	StorageDoubleMap<_, Twox64Concat, T::AccountId, Twox64Concat, Provider, ExternalId, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn user_list)]
@@ -47,9 +47,11 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		AddedUserAddress {
 			who: T::AccountId,
+			provider: Provider
 		},
 		RemovedUserAddress {
 			who: T::AccountId,
+			provider: Provider
 		},
 		AddedUserToList {
 			who: T::AccountId,
@@ -83,19 +85,20 @@ pub mod pallet {
 			let provider_bounded: Provider = Provider::defensive_truncate_from(provider.clone());
 			let external_id_bounded: ExternalId =
 				ExternalId::defensive_truncate_from(external_id.clone());
-			<ExternalIdAddress<T>>::insert(&user, (provider_bounded, external_id_bounded));
-			Self::deposit_event(Event::AddedUserAddress { who: user });
+			<ExternalIdAddress<T>>::insert(&user, &provider_bounded, external_id_bounded);
+			Self::deposit_event(Event::AddedUserAddress { who: user, provider: provider_bounded });
 			Ok(())
 		}
 
 		#[pallet::call_index(1)]
 		#[pallet::weight((10_100, DispatchClass::Normal))]
-		pub fn remove_user_address(origin: OriginFor<T>, user: T::AccountId) -> DispatchResult {
+		pub fn remove_user_address(origin: OriginFor<T>, user: T::AccountId, provider: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			let is_manager = <PalletManager<T>>::get(who);
 			ensure!(is_manager, Error::<T>::InvalidOrigin);
-			<ExternalIdAddress<T>>::remove(&user);
-			Self::deposit_event(Event::RemovedUserAddress { who: user });
+			let provider_bounded: Provider = Provider::defensive_truncate_from(provider.clone());
+			<ExternalIdAddress<T>>::remove(&user, &provider_bounded);
+			Self::deposit_event(Event::RemovedUserAddress { who: user, provider: provider_bounded });
 			Ok(())
 		}
 
