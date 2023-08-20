@@ -640,7 +640,7 @@ construct_runtime!(
 		RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
 		LuckyNumber: pallet_lucky_number,
 		Did: pallet_did,
-		GiveAway: pallet_ocw_giveaway,
+		Giveaway: pallet_ocw_giveaway,
 		Uniques: pallet_uniques,
 		Nfts: pallet_nfts,
 		Assets: pallet_assets,
