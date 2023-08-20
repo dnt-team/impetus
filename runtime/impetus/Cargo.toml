@@ -65,6 +65,7 @@ pallet-lucky-number = { workspace = true }
 pallet-did = { workspace = true }
 pallet-ocw-giveaway = { workspace = true }
 pallet-nfts = { workspace = true }
+pallet-assets = { workspace = true }
 pallet-uniques = { workspace = true }
 pallet-utility = { workspace = true }
 precompile-utils = { workspace = true }

@@ -16,7 +16,7 @@ use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{
 	crypto::{ByteArray, KeyTypeId},
-	OpaqueMetadata, H160, H256, U256,
+	OpaqueMetadata, H160, H256, U256, ConstU128
 };
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
@@ -506,12 +506,15 @@ impl pallet_ocw_giveaway::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
-	type ManagerOrigin = pallet_collective::EnsureMember<AccountId, ManagerCollective>;
+	type GiveawayOrigin = pallet_collective::EnsureMember<AccountId, ManagerCollective>;
 	type PotDeposit = PotDeposit;
 	type MaxSet = MaxParticipants;
 	type NftCollectionId = <Self as pallet_nfts::Config>::CollectionId;
 	type NftId = <Self as pallet_nfts::Config>::ItemId;
 	type Nfts = Nfts;
+	type AssetBalance = <Self as pallet_balances::Config>::Balance;
+	type AssetId = <Self as pallet_assets::Config>::AssetId;
+	type Assets = Assets;
 	type AuthorityId = pallet_ocw_giveaway::crypto::TestAuthId;
 }
 
@@ -548,6 +551,34 @@ impl pallet_uniques::Config for Runtime {
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
 	type Locker = ();
+}
+
+parameter_types! {
+	pub const AssetDeposit: Balance = 100 * DOLLARS;
+	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
+}
+
+impl pallet_assets::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = Balance;
+	type AssetId = u32;
+	type AssetIdParameter = scale_codec::Compact<u32>;
+	type Currency = Balances;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ConstU128<DOLLARS>;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type CallbackHandle = ();
+	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
+	type RemoveItemsLimit = ConstU32<1000>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type BenchmarkHelper = ();
 }
 
 parameter_types! {
@@ -612,6 +643,7 @@ construct_runtime!(
 		GiveAway: pallet_ocw_giveaway,
 		Uniques: pallet_uniques,
 		Nfts: pallet_nfts,
+		Assets: pallet_assets,
 		Utility: pallet_utility,
 		ManagerCommittee: pallet_collective::<Instance1>,
 	}
