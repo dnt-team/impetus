@@ -166,6 +166,6 @@ pallet-collective = { version = "4.0.0-dev", git = "https://github.com/paritytec
 pallet-insecure-randomness-collective-flip = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.43", default-features = false }
 pallet-lucky-number = { path = "pallets/lucky-number",  default-features = false }
 pallet-did = { path = "pallets/did",  default-features = false }
-pallet-ocw-giveaway = { path = "pallets/give-away",  default-features = false }
+pallet-ocw-giveaway = { path = "pallets/giveaway",  default-features = false }
 pallet-evm-precompile-batch = { path = "contracts/batch", default-features = false }
 pallet-evm-precompile-lucky-number = { path = "contracts/lucky-number", default-features = false }

@@ -56,7 +56,7 @@ pub mod pallet {
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
 
-	pub type GiveAwayName = BoundedVec<u8, ConstU32<128>>;
+	pub type GiveawayName = BoundedVec<u8, ConstU32<128>>;
 	pub type RequestId = BoundedVec<u8, ConstU32<64>>;
 	pub type Results = BoundedVec<U256, ConstU32<32>>;
 
@@ -185,8 +185,8 @@ pub mod pallet {
 		TypeInfo,
 		MaxEncodedLen
 	)]
-	pub struct GiveAwayConfig<BlockNumber, Balance, AccountId, NftCollectonId, NftId> {
-		name: GiveAwayName,
+	pub struct GiveawayConfig<BlockNumber, Balance, AccountId, NftCollectonId, NftId> {
+		name: GiveawayName,
 		start: BlockNumber,
 		end: BlockNumber,
 		kyc: KYCStatus,
@@ -209,21 +209,28 @@ pub mod pallet {
 		EndBlockInvalid,
 		AlreadyJoined,
 		CannotSetResultAgain,
+		InvalidResult,
+		InvalidRound,
+		GiveawayEnded,
+		GiveawayNotStarted
 	}
 
 	#[pallet::storage]
 	pub type PalletManager<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, bool, ValueQuery>;
 
 	#[pallet::storage]
-	pub type GiveAwayIndex<T: Config> = StorageValue<_, u32, ValueQuery>;
+	pub type RoundWinner<T: Config> = StorageMap<_, Twox64Concat, u32, T::AccountId>;
+
+	#[pallet::storage]
+	pub type GiveawayIndex<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn give_away)]
-	pub type GiveAway<T: Config> = StorageMap<
+	pub type Giveaway<T: Config> = StorageMap<
 		_,
 		Twox64Concat,
 		u32,
-		GiveAwayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId, T::NftCollectionId, T::NftId>,
+		GiveawayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId, T::NftCollectionId, T::NftId>,
 	>;
 
 	#[pallet::storage]
@@ -232,55 +239,65 @@ pub mod pallet {
 		StorageMap<_, Twox64Concat, u32, BoundedBTreeSet<T::AccountId, T::MaxSet>, ValueQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn get_give_aways_by_block)]
-	pub type BlockToGiveAway<T: Config> =
+	#[pallet::getter(fn get_giveaways_by_block)]
+	pub type BlockToGiveaway<T: Config> =
 		StorageMap<_, Twox64Concat, T::BlockNumber, BoundedVec<u32, T::MaxSet>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_results_by_block)]
-	pub type BlockToResults<T: Config> = StorageMap<
-		_,
-		Twox64Concat,
-		T::BlockNumber,
-		(RequestId, Results),
-		OptionQuery,
-	>;
+	pub type BlockToResults<T: Config> =
+		StorageMap<_, Twox64Concat, T::BlockNumber, (RequestId, Results), OptionQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		GiveAwayCreated { index: u32 },
-		Winner { index: u32, who: T::AccountId },
-		Participated { index: u32, who: T::AccountId },
-		Results { block: T::BlockNumber, results: (RequestId, Results) },
+		GiveawayCreated {
+			index: u32,
+		},
+		Winner {
+			index: u32,
+			who: T::AccountId,
+		},
+		Participated {
+			index: u32,
+			who: T::AccountId,
+		},
+		Results {
+			block: T::BlockNumber,
+			results: (RequestId, Results),
+		},
+		RewardClaimed {
+			index: u32,
+			winner: T::AccountId,
+		},
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn offchain_worker(block_number: T::BlockNumber) {
-			let signer = Signer::<T, T::AuthorityId>::all_accounts();
-			// The entry point of your code called by offchain worker
-		}
+	// #[pallet::hooks]
+	// impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		// fn offchain_worker(block_number: T::BlockNumber) {
+		// 	let signer = Signer::<T, T::AuthorityId>::all_accounts();
+		// 	// The entry point of your code called by offchain worker
+		// }
 
-		fn on_initialize(n: T::BlockNumber) -> Weight {
-			let giveaways = BlockToGiveAway::<T>::get(n);
-			for giveaway_index in giveaways.iter() {
-				let giveaway = GiveAway::<T>::get(giveaway_index);
-				let participants = Participants::<T>::get(giveaway_index);
-				let number: usize = Self::random_number(
-					giveaway_index.clone(),
-					participants.len().try_into().unwrap(),
-				)
-				.try_into()
-				.unwrap();
-				Self::deposit_event(Event::<T>::Winner {
-					index: *giveaway_index,
-					who: participants.into_iter().nth(number).unwrap(),
-				});
-			}
-			T::DbWeight::get().reads(2)
-		}
-	}
+		// fn on_initialize(n: T::BlockNumber) -> Weight {
+			// let giveaways = BlockToGiveaway::<T>::get(n);
+			// for giveaway_index in giveaways.iter() {
+			// 	let giveaway = Giveaway::<T>::get(giveaway_index);
+			// 	let participants = Participants::<T>::get(giveaway_index);
+			// 	let number: usize = Self::random_number(
+			// 		giveaway_index.clone(),
+			// 		participants.len().try_into().unwrap(),
+			// 	)
+			// 	.try_into()
+			// 	.unwrap();
+			// 	Self::deposit_event(Event::<T>::Winner {
+			// 		index: *giveaway_index,
+			// 		who: participants.into_iter().nth(number).unwrap(),
+			// 	});
+			// }
+			// T::DbWeight::get().reads(2)
+		// }
+	// }
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -306,14 +323,14 @@ pub mod pallet {
 			let block_number = frame_system::Pallet::<T>::block_number();
 			ensure!(block_number < start_block, Error::<T>::StartBlockInvalid);
 			ensure!(end_block > start_block, Error::<T>::EndBlockInvalid);
-			let name_bounded: GiveAwayName = GiveAwayName::defensive_truncate_from(name.clone());
-			let index = GiveAwayIndex::<T>::get();
+			let name_bounded: GiveawayName = GiveawayName::defensive_truncate_from(name.clone());
+			let index = GiveawayIndex::<T>::get();
 			let next_index = index.saturating_add(1);
-			GiveAwayIndex::<T>::put(next_index);
+			GiveawayIndex::<T>::put(next_index);
 			// Attempt to update the lottery with the given kind
-			GiveAway::<T>::insert(
+			Giveaway::<T>::insert(
 				index,
-				GiveAwayConfig {
+				GiveawayConfig {
 					name: name_bounded,
 					start: start_block,
 					end: end_block,
@@ -328,7 +345,7 @@ pub mod pallet {
 					max_join,
 				},
 			);
-			BlockToGiveAway::<T>::try_append(end_block, index).map_err(|_| Error::<T>::TooMany)?;
+			BlockToGiveaway::<T>::try_append(end_block, index).map_err(|_| Error::<T>::TooMany)?;
 			// Get the account for the lottery pot
 			let pallet_account = Self::account_id();
 
@@ -345,7 +362,7 @@ pub mod pallet {
 				}
 			}
 			// Deposit an event to indicate that the lottery has started
-			Self::deposit_event(Event::<T>::GiveAwayCreated { index });
+			Self::deposit_event(Event::<T>::GiveawayCreated { index });
 			Ok(())
 		}
 
@@ -353,7 +370,10 @@ pub mod pallet {
 		#[pallet::weight((10_100, DispatchClass::Normal))]
 		pub fn participate(origin: OriginFor<T>, index: u32) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let giveaways = GiveAway::<T>::get(index).unwrap();
+			let giveaways = Giveaway::<T>::get(index).unwrap();
+			let current_block = frame_system::Pallet::<T>::block_number();
+			ensure!(giveaways.end >= current_block, Error::<T>::GiveawayEnded);
+			ensure!(giveaways.start <= current_block, Error::<T>::GiveawayNotStarted);
 			Participants::<T>::try_mutate(index, |participants| -> DispatchResult {
 				ensure!(!participants.contains(&who), Error::<T>::AlreadyJoined);
 				ensure!(
@@ -390,11 +410,67 @@ pub mod pallet {
 				!<BlockToResults<T>>::contains_key(block_number),
 				Error::<T>::CannotSetResultAgain
 			);
-			
-			let result_bounded: Results = Results::defensive_truncate_from(result);
+			let current_block = frame_system::Pallet::<T>::block_number();
+			ensure!(block_number < current_block, Error::<T>::EndBlockInvalid);
+			let giveaways = BlockToGiveaway::<T>::get(block_number);
+			ensure!(giveaways.len() == result.len(), Error::<T>::InvalidResult);
+			let results_bounded: Results = Results::defensive_truncate_from(result);
 			let request_id_bounded: RequestId = RequestId::defensive_truncate_from(request_id);
-			BlockToResults::<T>::insert(block_number, (&request_id_bounded, &result_bounded));
-			Self::deposit_event(Event::<T>::Results { block: block_number, results: (request_id_bounded, result_bounded) });
+			BlockToResults::<T>::insert(block_number, (&request_id_bounded, &results_bounded));
+			for (giveaway, result_bounded) in giveaways.iter().zip(results_bounded.iter()) {
+				let participants = Participants::<T>::get(giveaway);
+				let participants_len = participants.len() as u64;
+				if participants_len != 0 {
+					let mut index: usize = (result_bounded.low_u64() % participants_len)
+						.try_into()
+						.unwrap();
+					if index == 0 {
+						index = participants_len as usize;
+					}
+					let winner = participants
+						.into_iter()
+						.nth(index.saturating_sub(1))
+						.unwrap();
+					RoundWinner::<T>::insert(giveaway, winner);
+				} else {
+					let giveaway_info = Giveaway::<T>::get(giveaway).unwrap();
+					RoundWinner::<T>::insert(giveaway, giveaway_info.creator);
+				}
+			}
+			Self::deposit_event(Event::<T>::Results {
+				block: block_number,
+				results: (request_id_bounded, results_bounded),
+			});
+			Ok(())
+		}
+
+		#[pallet::call_index(3)]
+		#[pallet::weight((10_100, DispatchClass::Normal))]
+		pub fn claim_reward(origin: OriginFor<T>, round: u32) -> DispatchResult {
+			_ = ensure_signed(origin)?;
+			let round_winner = RoundWinner::<T>::get(round);
+			let giveaway = Giveaway::<T>::get(round);
+			ensure!(
+				(giveaway.is_some() && round_winner.is_some()),
+				Error::<T>::InvalidRound
+			);
+			let giveaway = giveaway.unwrap();
+			let round_winner = round_winner.unwrap();
+			let pallet_account = Self::account_id();
+			match giveaway.asset_type {
+				AssetType::NonFungibleToken => {
+					let nft_info = giveaway.nft.unwrap();
+					Self::transfer_nft(nft_info.collection_id, nft_info.nft_id, &round_winner)?;
+				}
+				AssetType::FungibleToken => {
+					let token_info = giveaway.token.unwrap();
+					Self::transfer_asset(&pallet_account, &round_winner, token_info.amount)?;
+				}
+			}
+			Self::deposit_event(Event::<T>::RewardClaimed {
+				index: round,
+				winner: round_winner,
+			});
 			Ok(())
 		}
 	}
