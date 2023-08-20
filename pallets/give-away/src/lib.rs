@@ -4,21 +4,25 @@ use frame_support::{
 	ensure,
 	pallet_prelude::MaxEncodedLen,
 	traits::{
-		tokens::nonfungibles_v2::{Inspect as NonFungiblesInspect, Transfer},
+		tokens::{
+			fungible::Mutate as MutateFungible,
+			fungibles::{Create, Inspect, Mutate},
+			nonfungibles_v2::{Inspect as NonFungiblesInspect, Transfer},
+			AssetId, Balance as AssetBalance,
+		},
 		Currency, ExistenceRequirement, Get, Randomness, ReservableCurrency,
 	},
 	PalletId,
 };
-use sp_core::{crypto::KeyTypeId};
+use sp_core::{crypto::KeyTypeId, U256};
 
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ga!!");
 
 pub mod crypto {
 	use super::KEY_TYPE;
-	use sp_core::sr25519::Signature as Sr25519Signature;
 	use sp_runtime::{
 		app_crypto::{app_crypto, sr25519},
-		traits::Verify, MultiSignature, MultiSigner
+		MultiSignature, MultiSigner,
 	};
 	app_crypto!(sr25519, KEY_TYPE);
 
@@ -26,37 +30,46 @@ pub mod crypto {
 
 	// implemented for runtime
 	impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
-	type RuntimeAppPublic = Public;
-	type GenericSignature = sp_core::sr25519::Signature;
-	type GenericPublic = sp_core::sr25519::Public;
+		type RuntimeAppPublic = Public;
+		type GenericSignature = sp_core::sr25519::Signature;
+		type GenericPublic = sp_core::sr25519::Public;
 	}
 }
 
+use frame_system::offchain::{AppCrypto, CreateSignedTransaction, Signer};
 pub use pallet::*;
 use scale_codec::{Decode, Encode};
 use sp_runtime::traits::{AccountIdConversion, Saturating, Zero};
-use frame_system::offchain::{AppCrypto, CreateSignedTransaction, Signer};
 use sp_std::vec::Vec;
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{pallet_prelude::*, traits::DefensiveTruncateFrom, BoundedBTreeSet};
+	use frame_support::{
+		pallet_prelude::{OptionQuery, *},
+		traits::DefensiveTruncateFrom,
+		BoundedBTreeSet,
+	};
 	use frame_system::pallet_prelude::*;
 	use sp_std::{fmt::Display, prelude::*};
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
 
 	pub type GiveAwayName = BoundedVec<u8, ConstU32<128>>;
+	pub type RequestId = BoundedVec<u8, ConstU32<64>>;
+	pub type Results = BoundedVec<U256, ConstU32<32>>;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: CreateSignedTransaction<Call<Self>> + frame_system::Config + pallet_did::Config {
+	pub trait Config:
+		CreateSignedTransaction<Call<Self>> + frame_system::Config + pallet_did::Config
+	{
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// The manager origin.
-		type ManagerOrigin: EnsureOrigin<Self::RuntimeOrigin, Success = Self::AccountId>;
+		type GiveawayOrigin: EnsureOrigin<Self::RuntimeOrigin, Success = Self::AccountId>;
+
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -80,6 +93,16 @@ pub mod pallet {
 				ItemId = Self::NftId,
 				CollectionId = Self::NftCollectionId,
 			> + Transfer<Self::AccountId>;
+
+		/// The type used to describe the amount of fractions converted into assets.
+		type AssetBalance: AssetBalance;
+
+		/// The type used to identify the assets created during fractionalization.
+		type AssetId: AssetId;
+		/// Registry for the minted assets.
+		type Assets: Create<Self::AccountId, AssetId = Self::AssetId, Balance = Self::AssetBalance>
+			+ Mutate<Self::AccountId, AssetId = Self::AssetId, Balance = Self::AssetBalance>
+			+ Inspect<Self::AccountId>;
 	}
 
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
@@ -112,7 +135,6 @@ pub mod pallet {
 	pub enum AssetType {
 		FungibleToken,
 		NonFungibleToken,
-		Both,
 	}
 
 	impl Default for AssetType {
@@ -132,9 +154,9 @@ pub mod pallet {
 		TypeInfo,
 		MaxEncodedLen
 	)]
-	pub struct NftInfo {
-		collection_id: u32,
-		item_id: u32,
+	pub struct NftInfo<NftCollectionId, NftId> {
+		collection_id: NftCollectionId,
+		nft_id: NftId,
 	}
 
 	#[derive(
@@ -163,7 +185,7 @@ pub mod pallet {
 		TypeInfo,
 		MaxEncodedLen
 	)]
-	pub struct GiveAwayConfig<BlockNumber, Balance, AccountId> {
+	pub struct GiveAwayConfig<BlockNumber, Balance, AccountId, NftCollectonId, NftId> {
 		name: GiveAwayName,
 		start: BlockNumber,
 		end: BlockNumber,
@@ -174,14 +196,19 @@ pub mod pallet {
 		creator: AccountId,
 		asset_type: AssetType,
 		token: Option<TokenInfo<Balance>>,
-		nft: Option<NftInfo>,
+		nft: Option<NftInfo<NftCollectonId, NftId>>,
+		max_join: u32,
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
 		/// A lottery has not been configured.
+		TooMany,
 		TooManyParticipants,
+		StartBlockInvalid,
+		EndBlockInvalid,
 		AlreadyJoined,
+		CannotSetResultAgain,
 	}
 
 	#[pallet::storage]
@@ -196,7 +223,7 @@ pub mod pallet {
 		_,
 		Twox64Concat,
 		u32,
-		GiveAwayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>,
+		GiveAwayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId, T::NftCollectionId, T::NftId>,
 	>;
 
 	#[pallet::storage]
@@ -209,12 +236,23 @@ pub mod pallet {
 	pub type BlockToGiveAway<T: Config> =
 		StorageMap<_, Twox64Concat, T::BlockNumber, BoundedVec<u32, T::MaxSet>, ValueQuery>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn get_results_by_block)]
+	pub type BlockToResults<T: Config> = StorageMap<
+		_,
+		Twox64Concat,
+		T::BlockNumber,
+		(RequestId, Results),
+		OptionQuery,
+	>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		GiveAwayCreated { index: u32 },
 		Winner { index: u32, who: T::AccountId },
 		Participated { index: u32, who: T::AccountId },
+		Results { block: T::BlockNumber, results: (RequestId, Results) },
 	}
 
 	#[pallet::hooks]
@@ -259,13 +297,19 @@ pub mod pallet {
 			fee: BalanceOf<T>,
 			asset_type: AssetType,
 			token: Option<TokenInfo<BalanceOf<T>>>,
-			nft: Option<NftInfo>,
+			nft: Option<NftInfo<T::NftCollectionId, T::NftId>>,
+			max_join: u32,
 		) -> DispatchResult {
 			// Get user
 			let who = ensure_signed(origin.clone())?;
 			// Get the current index for the given kind of giveaway
+			let block_number = frame_system::Pallet::<T>::block_number();
+			ensure!(block_number < start_block, Error::<T>::StartBlockInvalid);
+			ensure!(end_block > start_block, Error::<T>::EndBlockInvalid);
 			let name_bounded: GiveAwayName = GiveAwayName::defensive_truncate_from(name.clone());
 			let index = GiveAwayIndex::<T>::get();
+			let next_index = index.saturating_add(1);
+			GiveAwayIndex::<T>::put(next_index);
 			// Attempt to update the lottery with the given kind
 			GiveAway::<T>::insert(
 				index,
@@ -278,26 +322,28 @@ pub mod pallet {
 					pay_fee,
 					fee,
 					creator: who.clone(),
-					asset_type,
-					token,
-					nft,
+					asset_type: asset_type.clone(),
+					token: token.clone(),
+					nft: nft.clone(),
+					max_join,
 				},
 			);
+			BlockToGiveAway::<T>::try_append(end_block, index).map_err(|_| Error::<T>::TooMany)?;
 			// Get the account for the lottery pot
-			let lottery_account = Self::account_id();
+			let pallet_account = Self::account_id();
 
-			T::Currency::deposit_creating(&lottery_account, T::PotDeposit::get());
+			T::Currency::deposit_creating(&pallet_account, T::PotDeposit::get());
 
-			// match asset_type {
-			// 	AssetType::NonFungibleToken => {
-			// 		T::Nfts::transfer(
-			// 			&nft.unwrap().collection_id.into(),
-			// 			&nft.unwrap().item_id.into(),
-			// 			&Self::account_id(),
-			// 		);
-			// 	}
-			// }
-
+			match asset_type {
+				AssetType::NonFungibleToken => {
+					let nft_info = nft.unwrap();
+					Self::transfer_nft(nft_info.collection_id, nft_info.nft_id, &pallet_account)?;
+				}
+				AssetType::FungibleToken => {
+					let token_info = token.unwrap();
+					Self::transfer_asset(&who, &pallet_account, token_info.amount)?;
+				}
+			}
 			// Deposit an event to indicate that the lottery has started
 			Self::deposit_event(Event::<T>::GiveAwayCreated { index });
 			Ok(())
@@ -307,15 +353,18 @@ pub mod pallet {
 		#[pallet::weight((10_100, DispatchClass::Normal))]
 		pub fn participate(origin: OriginFor<T>, index: u32) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			let giveaways = GiveAway::<T>::get(index).unwrap();
 			Participants::<T>::try_mutate(index, |participants| -> DispatchResult {
 				ensure!(!participants.contains(&who), Error::<T>::AlreadyJoined);
+				ensure!(
+					((participants.len() as u32) < giveaways.max_join),
+					Error::<T>::TooManyParticipants
+				);
 				participants
 					.try_insert(who.clone())
 					.map_err(|_| Error::<T>::TooManyParticipants)?;
 				Ok(())
 			})?;
-			let giveaways = GiveAway::<T>::get(index).unwrap();
-
 			if giveaways.pay_fee {
 				T::Currency::transfer(
 					&who,
@@ -324,8 +373,28 @@ pub mod pallet {
 					ExistenceRequirement::AllowDeath,
 				)?;
 			}
-
 			Self::deposit_event(Event::<T>::Participated { index, who });
+			Ok(())
+		}
+
+		#[pallet::call_index(2)]
+		#[pallet::weight((10_100, DispatchClass::Normal))]
+		pub fn set_block_result(
+			origin: OriginFor<T>,
+			block_number: T::BlockNumber,
+			request_id: Vec<u8>,
+			result: Vec<U256>,
+		) -> DispatchResult {
+			T::GiveawayOrigin::ensure_origin(origin)?;
+			ensure!(
+				!<BlockToResults<T>>::contains_key(block_number),
+				Error::<T>::CannotSetResultAgain
+			);
+			
+			let result_bounded: Results = Results::defensive_truncate_from(result);
+			let request_id_bounded: RequestId = RequestId::defensive_truncate_from(request_id);
+			BlockToResults::<T>::insert(block_number, (&request_id_bounded, &result_bounded));
+			Self::deposit_event(Event::<T>::Results { block: block_number, results: (request_id_bounded, result_bounded) });
 			Ok(())
 		}
 	}
@@ -338,6 +407,22 @@ impl<T: Config> Pallet<T> {
 	/// value and only call this once.
 	pub fn account_id() -> T::AccountId {
 		T::PalletId::get().into_account_truncating()
+	}
+
+	fn transfer_nft(
+		nft_collection_id: T::NftCollectionId,
+		nft_id: T::NftId,
+		account: &T::AccountId,
+	) -> DispatchResult {
+		T::Nfts::transfer(&nft_collection_id, &nft_id, account)
+	}
+
+	fn transfer_asset(
+		from: &T::AccountId,
+		to: &T::AccountId,
+		amount: BalanceOf<T>,
+	) -> DispatchResult {
+		T::Currency::transfer(from, to, amount, ExistenceRequirement::KeepAlive)
 	}
 
 	fn random_number(index: u32, length: u32) -> u32 {
