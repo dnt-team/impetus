@@ -106,6 +106,9 @@ pub fn development_config(enable_manual_seal: Option<bool>) -> DevChainSpec {
 					vec![authority_keys_from_seed("Alice")],
 					// Ethereum chain ID
 					SS58Prefix::get() as u64,
+					vec![
+						get_account_id_from_seed::<sr25519::Public>("Alice"),
+					],
 				),
 				enable_manual_seal,
 			}
@@ -160,6 +163,9 @@ pub fn local_testnet_config() -> ChainSpec {
 					authority_keys_from_seed("Bob"),
 				],
 				42,
+				vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+				],
 			)
 		},
 		// Bootnodes
@@ -174,6 +180,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		None,
 		// Extensions
 		None,
+		
 	)
 }
 
@@ -184,10 +191,11 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	chain_id: u64,
+	did_managers: Vec<AccountId>,
 ) -> GenesisConfig {
 	use impetus_runtime::{
 		AuraConfig, BalancesConfig, EVMChainIdConfig, EVMConfig, GrandpaConfig, SudoConfig,
-		SystemConfig,
+		SystemConfig, DidConfig
 	};
 
 	let num_endowed_accounts = endowed_accounts.len();
@@ -315,6 +323,10 @@ fn testnet_genesis(
 		ethereum: Default::default(),
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
-		assets: Default::default()
+		assets: Default::default(),
+		did: DidConfig {
+			managers: did_managers.iter().cloned()
+			.collect(),
+		}
 	}
 }

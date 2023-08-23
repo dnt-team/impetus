@@ -17,7 +17,7 @@ use frame_support::{
 use sp_core::{crypto::KeyTypeId, U256};
 
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ga!!");
-
+use pallet_did::Provider;
 pub mod crypto {
 	use super::KEY_TYPE;
 	use sp_runtime::{
@@ -109,7 +109,6 @@ pub mod pallet {
 	pub enum KYCStatus {
 		Tier0,
 		Tier1,
-		Tier2,
 	}
 
 	impl Default for KYCStatus {
@@ -212,7 +211,8 @@ pub mod pallet {
 		InvalidResult,
 		InvalidRound,
 		GiveawayEnded,
-		GiveawayNotStarted
+		GiveawayNotStarted,
+		UserIsNotVerified,
 	}
 
 	#[pallet::storage]
@@ -257,6 +257,7 @@ pub mod pallet {
 		Winner {
 			index: u32,
 			who: T::AccountId,
+			status: bool
 		},
 		Participated {
 			index: u32,
@@ -274,29 +275,29 @@ pub mod pallet {
 
 	// #[pallet::hooks]
 	// impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		// fn offchain_worker(block_number: T::BlockNumber) {
-		// 	let signer = Signer::<T, T::AuthorityId>::all_accounts();
-		// 	// The entry point of your code called by offchain worker
-		// }
+	// fn offchain_worker(block_number: T::BlockNumber) {
+	// 	let signer = Signer::<T, T::AuthorityId>::all_accounts();
+	// 	// The entry point of your code called by offchain worker
+	// }
 
-		// fn on_initialize(n: T::BlockNumber) -> Weight {
-			// let giveaways = BlockToGiveaway::<T>::get(n);
-			// for giveaway_index in giveaways.iter() {
-			// 	let giveaway = Giveaway::<T>::get(giveaway_index);
-			// 	let participants = Participants::<T>::get(giveaway_index);
-			// 	let number: usize = Self::random_number(
-			// 		giveaway_index.clone(),
-			// 		participants.len().try_into().unwrap(),
-			// 	)
-			// 	.try_into()
-			// 	.unwrap();
-			// 	Self::deposit_event(Event::<T>::Winner {
-			// 		index: *giveaway_index,
-			// 		who: participants.into_iter().nth(number).unwrap(),
-			// 	});
-			// }
-			// T::DbWeight::get().reads(2)
-		// }
+	// fn on_initialize(n: T::BlockNumber) -> Weight {
+	// let giveaways = BlockToGiveaway::<T>::get(n);
+	// for giveaway_index in giveaways.iter() {
+	// 	let giveaway = Giveaway::<T>::get(giveaway_index);
+	// 	let participants = Participants::<T>::get(giveaway_index);
+	// 	let number: usize = Self::random_number(
+	// 		giveaway_index.clone(),
+	// 		participants.len().try_into().unwrap(),
+	// 	)
+	// 	.try_into()
+	// 	.unwrap();
+	// 	Self::deposit_event(Event::<T>::Winner {
+	// 		index: *giveaway_index,
+	// 		who: participants.into_iter().nth(number).unwrap(),
+	// 	});
+	// }
+	// T::DbWeight::get().reads(2)
+	// }
 	// }
 
 	#[pallet::call]
@@ -373,7 +374,15 @@ pub mod pallet {
 			let giveaways = Giveaway::<T>::get(index).unwrap();
 			let current_block = frame_system::Pallet::<T>::block_number();
 			ensure!(giveaways.end >= current_block, Error::<T>::GiveawayEnded);
-			ensure!(giveaways.start <= current_block, Error::<T>::GiveawayNotStarted);
+			ensure!(
+				giveaways.start <= current_block,
+				Error::<T>::GiveawayNotStarted
+			);
+			if giveaways.kyc == KYCStatus::Tier1 {
+				let provider: Provider = Provider::defensive_truncate_from("Fractal".as_bytes().to_vec());
+				let value = pallet_did::ExternalIdAddress::<T>::get(&who, provider);
+				ensure!(value.len() > 0, Error::<T>::UserIsNotVerified);
+			}
 			Participants::<T>::try_mutate(index, |participants| -> DispatchResult {
 				ensure!(!participants.contains(&who), Error::<T>::AlreadyJoined);
 				ensure!(
@@ -431,12 +440,23 @@ pub mod pallet {
 						.into_iter()
 						.nth(index.saturating_sub(1))
 						.unwrap();
-					RoundWinner::<T>::insert(giveaway, winner);
+					RoundWinner::<T>::insert(giveaway, &winner);
+					Self::deposit_event(Event::<T>::Winner {
+						index: *giveaway,
+						who: winner,
+						status: true
+					});
 				} else {
 					let giveaway_info = Giveaway::<T>::get(giveaway).unwrap();
-					RoundWinner::<T>::insert(giveaway, giveaway_info.creator);
+					RoundWinner::<T>::insert(giveaway, &giveaway_info.creator);
+					Self::deposit_event(Event::<T>::Winner {
+						index: *giveaway,
+						who: giveaway_info.creator,
+						status: false
+					});
 				}
 			}
+			BlockToGiveaway::<T>::remove(block_number);
 			Self::deposit_event(Event::<T>::Results {
 				block: block_number,
 				results: (request_id_bounded, results_bounded),
