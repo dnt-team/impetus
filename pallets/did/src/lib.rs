@@ -30,12 +30,20 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
+	#[pallet::getter(fn did_manager)]
 	pub type PalletManager<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, bool, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn external_id)]
-	pub type ExternalIdAddress<T: Config> =
-	StorageDoubleMap<_, Twox64Concat, T::AccountId, Twox64Concat, Provider, ExternalId, ValueQuery>;
+	pub type ExternalIdAddress<T: Config> = StorageDoubleMap<
+		_,
+		Twox64Concat,
+		T::AccountId,
+		Twox64Concat,
+		Provider,
+		ExternalId,
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn user_list)]
@@ -47,11 +55,11 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		AddedUserAddress {
 			who: T::AccountId,
-			provider: Provider
+			provider: Provider,
 		},
 		RemovedUserAddress {
 			who: T::AccountId,
-			provider: Provider
+			provider: Provider,
 		},
 		AddedUserToList {
 			who: T::AccountId,
@@ -67,6 +75,29 @@ pub mod pallet {
 		RemovedManager {
 			manager: T::AccountId,
 		},
+	}
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub managers: Vec<T::AccountId>,
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self {
+				managers: vec![],
+			}
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			for manager in &self.managers {
+				<PalletManager<T>>::insert(manager, true);
+			}
+		}
 	}
 
 	#[pallet::call]
@@ -86,19 +117,29 @@ pub mod pallet {
 			let external_id_bounded: ExternalId =
 				ExternalId::defensive_truncate_from(external_id.clone());
 			<ExternalIdAddress<T>>::insert(&user, &provider_bounded, external_id_bounded);
-			Self::deposit_event(Event::AddedUserAddress { who: user, provider: provider_bounded });
+			Self::deposit_event(Event::AddedUserAddress {
+				who: user,
+				provider: provider_bounded,
+			});
 			Ok(())
 		}
 
 		#[pallet::call_index(1)]
 		#[pallet::weight((10_100, DispatchClass::Normal))]
-		pub fn remove_user_address(origin: OriginFor<T>, user: T::AccountId, provider: Vec<u8>) -> DispatchResult {
+		pub fn remove_user_address(
+			origin: OriginFor<T>,
+			user: T::AccountId,
+			provider: Vec<u8>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			let is_manager = <PalletManager<T>>::get(who);
 			ensure!(is_manager, Error::<T>::InvalidOrigin);
 			let provider_bounded: Provider = Provider::defensive_truncate_from(provider.clone());
 			<ExternalIdAddress<T>>::remove(&user, &provider_bounded);
-			Self::deposit_event(Event::RemovedUserAddress { who: user, provider: provider_bounded });
+			Self::deposit_event(Event::RemovedUserAddress {
+				who: user,
+				provider: provider_bounded,
+			});
 			Ok(())
 		}
 
@@ -142,29 +183,19 @@ pub mod pallet {
 
 		#[pallet::call_index(4)]
 		#[pallet::weight((10_100, DispatchClass::Normal))]
-		pub fn add_did_manager(
-			origin: OriginFor<T>,
-			manager: T::AccountId,
-		) -> DispatchResult {
+		pub fn add_did_manager(origin: OriginFor<T>, manager: T::AccountId) -> DispatchResult {
 			T::ManagerOrigin::ensure_origin(origin)?;
 			<PalletManager<T>>::insert(&manager, true);
-			Self::deposit_event(Event::AddedManager {
-				manager
-			});
+			Self::deposit_event(Event::AddedManager { manager });
 			Ok(())
 		}
 
 		#[pallet::call_index(5)]
 		#[pallet::weight((10_100, DispatchClass::Normal))]
-		pub fn remove_did_manager(
-			origin: OriginFor<T>,
-			manager: T::AccountId,
-		) -> DispatchResult {
+		pub fn remove_did_manager(origin: OriginFor<T>, manager: T::AccountId) -> DispatchResult {
 			T::ManagerOrigin::ensure_origin(origin)?;
 			<PalletManager<T>>::remove(&manager);
-			Self::deposit_event(Event::RemovedManager{
-				manager
-			});
+			Self::deposit_event(Event::RemovedManager { manager });
 			Ok(())
 		}
 	}
