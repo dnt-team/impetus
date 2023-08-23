@@ -121,12 +121,12 @@ pub mod pallet {
 	pub enum RandomType {
 		// LocalChain,
 		// Babe,
-		ChainLink,
+		Chainlink,
 	}
 
 	impl Default for RandomType {
 		fn default() -> Self {
-			RandomType::ChainLink
+			RandomType::Chainlink
 		}
 	}
 
@@ -170,8 +170,8 @@ pub mod pallet {
 		MaxEncodedLen
 	)]
 	pub struct TokenInfo<Balance> {
-		asset_id: u32,
-		amount: Balance,
+		pub asset_id: u32,
+		pub amount: Balance,
 	}
 
 	#[derive(
@@ -311,11 +311,8 @@ pub mod pallet {
 			end_block: T::BlockNumber,
 			kyc: KYCStatus,
 			random_type: RandomType,
-			pay_fee: bool,
-			fee: BalanceOf<T>,
 			asset_type: AssetType,
 			token: Option<TokenInfo<BalanceOf<T>>>,
-			nft: Option<NftInfo<T::NftCollectionId, T::NftId>>,
 			max_join: u32,
 		) -> DispatchResult {
 			// Get user
