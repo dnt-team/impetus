@@ -119,21 +119,21 @@ pub mod pallet {
 
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
 	pub enum RandomType {
-		LocalChain,
-		Babe,
+		// LocalChain,
+		// Babe,
 		ChainLink,
 	}
 
 	impl Default for RandomType {
 		fn default() -> Self {
-			RandomType::LocalChain
+			RandomType::ChainLink
 		}
 	}
 
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo, MaxEncodedLen)]
 	pub enum AssetType {
 		FungibleToken,
-		NonFungibleToken,
+		// NonFungibleToken,
 	}
 
 	impl Default for AssetType {
@@ -184,18 +184,18 @@ pub mod pallet {
 		TypeInfo,
 		MaxEncodedLen
 	)]
-	pub struct GiveawayConfig<BlockNumber, Balance, AccountId, NftCollectonId, NftId> {
+	pub struct GiveawayConfig<BlockNumber, Balance, AccountId> {
 		name: GiveawayName,
 		start: BlockNumber,
 		end: BlockNumber,
 		kyc: KYCStatus,
 		random_type: RandomType,
-		pay_fee: bool,
-		fee: Balance,
+		// pay_fee: bool,
+		// fee: Balance,
 		creator: AccountId,
 		asset_type: AssetType,
 		token: Option<TokenInfo<Balance>>,
-		nft: Option<NftInfo<NftCollectonId, NftId>>,
+		// nft: Option<NftInfo<NftCollectonId, NftId>>,
 		max_join: u32,
 	}
 
@@ -230,7 +230,7 @@ pub mod pallet {
 		_,
 		Twox64Concat,
 		u32,
-		GiveawayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId, T::NftCollectionId, T::NftId>,
+		GiveawayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>,
 	>;
 
 	#[pallet::storage]
@@ -337,12 +337,12 @@ pub mod pallet {
 					end: end_block,
 					kyc,
 					random_type,
-					pay_fee,
-					fee,
+					// pay_fee,
+					// fee,
 					creator: who.clone(),
 					asset_type: asset_type.clone(),
 					token: token.clone(),
-					nft: nft.clone(),
+					// nft: nft.clone(),
 					max_join,
 				},
 			);
@@ -353,10 +353,10 @@ pub mod pallet {
 			T::Currency::deposit_creating(&pallet_account, T::PotDeposit::get());
 
 			match asset_type {
-				AssetType::NonFungibleToken => {
-					let nft_info = nft.unwrap();
-					Self::transfer_nft(nft_info.collection_id, nft_info.nft_id, &pallet_account)?;
-				}
+				// AssetType::NonFungibleToken => {
+				// 	let nft_info = nft.unwrap();
+				// 	Self::transfer_nft(nft_info.collection_id, nft_info.nft_id, &pallet_account)?;
+				// }
 				AssetType::FungibleToken => {
 					let token_info = token.unwrap();
 					Self::transfer_asset(&who, &pallet_account, token_info.amount)?;
@@ -394,14 +394,14 @@ pub mod pallet {
 					.map_err(|_| Error::<T>::TooManyParticipants)?;
 				Ok(())
 			})?;
-			if giveaways.pay_fee {
-				T::Currency::transfer(
-					&who,
-					&Self::account_id(),
-					giveaways.fee,
-					ExistenceRequirement::AllowDeath,
-				)?;
-			}
+			// if giveaways.pay_fee {
+			// 	T::Currency::transfer(
+			// 		&who,
+			// 		&Self::account_id(),
+			// 		giveaways.fee,
+			// 		ExistenceRequirement::AllowDeath,
+			// 	)?;
+			// }
 			Self::deposit_event(Event::<T>::Participated { index, who });
 			Ok(())
 		}
@@ -478,10 +478,10 @@ pub mod pallet {
 			let round_winner = round_winner.unwrap();
 			let pallet_account = Self::account_id();
 			match giveaway.asset_type {
-				AssetType::NonFungibleToken => {
-					let nft_info = giveaway.nft.unwrap();
-					Self::transfer_nft(nft_info.collection_id, nft_info.nft_id, &round_winner)?;
-				}
+				// AssetType::NonFungibleToken => {
+				// 	let nft_info = giveaway.nft.unwrap();
+				// 	Self::transfer_nft(nft_info.collection_id, nft_info.nft_id, &round_winner)?;
+				// }
 				AssetType::FungibleToken => {
 					let token_info = giveaway.token.unwrap();
 					Self::transfer_asset(&pallet_account, &round_winner, token_info.amount)?;
