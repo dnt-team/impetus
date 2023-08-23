@@ -170,3 +170,4 @@ pallet-ocw-giveaway = { path = "pallets/giveaway",  default-features = false }
 pallet-evm-precompile-batch = { path = "contracts/batch", default-features = false }
 pallet-evm-precompile-lucky-number = { path = "contracts/lucky-number", default-features = false }
 pallet-evm-precompile-giveaway = { path = "contracts/giveaway", default-features = false }
+pallet-evm-precompile-did = { path = "contracts/did", default-features = false }

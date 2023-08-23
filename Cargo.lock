@@ -3565,6 +3565,7 @@ dependencies = [
  "pallet-evm",
  "pallet-evm-chain-id",
  "pallet-evm-precompile-batch",
+ "pallet-evm-precompile-did",
  "pallet-evm-precompile-giveaway",
  "pallet-evm-precompile-lucky-number",
  "pallet-evm-precompile-modexp",
@@ -5534,6 +5535,33 @@ dependencies = [
  "serde",
  "sha3",
  "slices",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-evm-precompile-did"
+version = "1.0.0"
+dependencies = [
+ "array-bytes 6.1.0",
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "log",
+ "num_enum 0.5.9",
+ "pallet-balances",
+ "pallet-did",
+ "pallet-evm",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "precompile-utils",
+ "rustc-hex",
+ "scale-info",
+ "serde",
+ "sha3",
  "sp-core",
  "sp-io",
  "sp-runtime",
