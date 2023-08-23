@@ -72,6 +72,7 @@ precompile-utils = { workspace = true }
 pallet-evm-precompile-batch = { workspace = true }
 pallet-evm-precompile-lucky-number = { workspace = true }
 pallet-evm-precompile-giveaway = { workspace = true }
+pallet-evm-precompile-did = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]

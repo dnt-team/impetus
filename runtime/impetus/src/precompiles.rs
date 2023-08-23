@@ -7,6 +7,7 @@ use sp_std::marker::PhantomData;
 use pallet_evm_precompile_batch::BatchPrecompile;
 use pallet_evm_precompile_lucky_number::LuckyNumberPrecompile;
 use pallet_evm_precompile_giveaway::GiveawayPrecompile;
+use pallet_evm_precompile_did::DidPrecompile;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
@@ -20,7 +21,7 @@ where
 	pub fn new() -> Self {
 		Self(Default::default())
 	}
-	pub fn used_addresses() -> [H160; 10] {
+	pub fn used_addresses() -> [H160; 11] {
 		[
 			hash(1),
 			hash(2),
@@ -31,6 +32,7 @@ where
 			hash(1025),
 			hash(2052),
 			hash(2053),
+			hash(2054),
 			hash(2056),
 		]
 	}
@@ -41,6 +43,7 @@ where
 	BatchPrecompile<R>: Precompile,
 	LuckyNumberPrecompile<R>: Precompile,
 	GiveawayPrecompile<R>: Precompile,
+	DidPrecompile<R>: Precompile,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
@@ -81,6 +84,10 @@ where
 			a if a == hash(2053) => {
 				log::info!("pre8 {:?}", a);
 				Some(GiveawayPrecompile::execute(handle))
+			}
+			a if a == hash(2054) => {
+				log::info!("pre8 {:?}", a);
+				Some(DidPrecompile::execute(handle))
 			}
 			a if a == hash(2056) => {
 				log::info!("pre9 {:?}", a);
