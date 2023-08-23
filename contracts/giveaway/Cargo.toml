@@ -1,0 +1,56 @@
+[package]
+name = "pallet-evm-precompile-giveaway"
+authors = [ "paritytech" ]
+description = "A Precompile for pallet-giveaway"
+edition = "2021"
+version = "1.0.0"
+
+[dependencies]
+array-bytes = "6.0.0"
+log = "0.4"
+num_enum = { workspace = true }
+rustc-hex = { version = "2.0.1", default-features = false }
+
+# Impetus
+pallet-ocw-giveaway = { workspace = true }
+precompile-utils = { workspace = true }
+
+# Substrate
+parity-scale-codec = { workspace = true, features = [ "max-encoded-len" ] }
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-std = { workspace = true }
+
+# Frontier
+fp-evm = { workspace = true }
+pallet-evm = { workspace = true }
+
+[dev-dependencies]
+derive_more = { workspace = true }
+serde ={ workspace = true }
+sha3 = { workspace = true }
+
+# Substrate
+
+pallet-balances = { workspace = true, features = [ "std" ] }
+pallet-timestamp = { workspace = true, features = [ "std" ] }
+parity-scale-codec = { workspace = true, features = [ "max-encoded-len", "std" ] }
+precompile-utils = { workspace = true, features = [ "std", "testing" ] }
+scale-info = { workspace = true, features = [ "derive", "std" ] }
+sp-runtime = { workspace = true, features = [ "std" ] }
+
+[features]
+default = [ "std" ]
+std = [
+	"fp-evm/std",
+	"frame-support/std",
+	"frame-system/std",
+	"pallet-evm/std",
+	"parity-scale-codec/std",
+	"precompile-utils/std",
+	"sp-core/std",
+	"sp-io/std",
+	"sp-std/std",
+]

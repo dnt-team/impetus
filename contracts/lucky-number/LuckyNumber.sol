@@ -3,7 +3,7 @@ pragma solidity >=0.8.3;
 
 
 /// @dev The Batch contract's address.
-address constant LUCKY_NUMBER_ADDRESS = 0x0000000000000000000000000000000000000808;
+address constant LUCKY_NUMBER_ADDRESS = 0x0000000000000000000000000000000000000804;
 
 /// @dev The Batch contract's instance.
 LuckyNumber constant LUCKY_NUMBER_CONTRACT = LuckyNumber(LUCKY_NUMBER_ADDRESS);
