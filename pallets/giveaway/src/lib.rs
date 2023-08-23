@@ -236,7 +236,13 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn participants)]
 	pub type Participants<T: Config> =
-		StorageMap<_, Twox64Concat, u32, BoundedBTreeSet<T::AccountId, T::MaxSet>, ValueQuery>;
+		StorageDoubleMap<_, Twox64Concat, u32, Twox64Concat, u32, T::AccountId>;
+
+	#[pallet::storage]
+	pub type TotalParticipantByGiveaway<T: Config> = StorageMap<_, Twox64Concat, u32, u32, ValueQuery>;
+
+	#[pallet::storage]
+	pub type GiveawayToUser<T: Config> = StorageDoubleMap<_, Twox64Concat, u32, Twox64Concat, T::AccountId, bool, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_giveaways_by_block)]
@@ -257,7 +263,7 @@ pub mod pallet {
 		Winner {
 			index: u32,
 			who: T::AccountId,
-			status: bool
+			status: bool,
 		},
 		Participated {
 			index: u32,
@@ -376,21 +382,22 @@ pub mod pallet {
 				Error::<T>::GiveawayNotStarted
 			);
 			if giveaways.kyc == KYCStatus::Tier1 {
-				let provider: Provider = Provider::defensive_truncate_from("Fractal".as_bytes().to_vec());
+				let provider: Provider =
+					Provider::defensive_truncate_from("Fractal".as_bytes().to_vec());
 				let value = pallet_did::ExternalIdAddress::<T>::get(&who, provider);
 				ensure!(value.len() > 0, Error::<T>::UserIsNotVerified);
 			}
-			Participants::<T>::try_mutate(index, |participants| -> DispatchResult {
-				ensure!(!participants.contains(&who), Error::<T>::AlreadyJoined);
+			
+				ensure!(!(GiveawayToUser::<T>::get(index, &who)) , Error::<T>::AlreadyJoined);
+				let total = TotalParticipantByGiveaway::<T>::get(index);
 				ensure!(
-					((participants.len() as u32) < giveaways.max_join),
+					total < giveaways.max_join,
 					Error::<T>::TooManyParticipants
 				);
-				participants
-					.try_insert(who.clone())
-					.map_err(|_| Error::<T>::TooManyParticipants)?;
-				Ok(())
-			})?;
+				Participants::<T>::insert(index, total, &who);
+				TotalParticipantByGiveaway::<T>::mutate(index, |value| {
+					*value = value.saturating_add(1);
+				});
 			// if giveaways.pay_fee {
 			// 	T::Currency::transfer(
 			// 		&who,
@@ -424,24 +431,20 @@ pub mod pallet {
 			let request_id_bounded: RequestId = RequestId::defensive_truncate_from(request_id);
 			BlockToResults::<T>::insert(block_number, (&request_id_bounded, &results_bounded));
 			for (giveaway, result_bounded) in giveaways.iter().zip(results_bounded.iter()) {
-				let participants = Participants::<T>::get(giveaway);
-				let participants_len = participants.len() as u64;
+				let participants_len = TotalParticipantByGiveaway::<T>::get(giveaway);
 				if participants_len != 0 {
-					let mut index: usize = (result_bounded.low_u64() % participants_len)
+					let mut index: u32 = (result_bounded.low_u32() % participants_len )
 						.try_into()
 						.unwrap();
 					if index == 0 {
-						index = participants_len as usize;
+						index = participants_len;
 					}
-					let winner = participants
-						.into_iter()
-						.nth(index.saturating_sub(1))
-						.unwrap();
+					let winner = Participants::<T>::get(giveaway, index.saturating_sub(1)).unwrap();
 					RoundWinner::<T>::insert(giveaway, &winner);
 					Self::deposit_event(Event::<T>::Winner {
 						index: *giveaway,
 						who: winner,
-						status: true
+						status: true,
 					});
 				} else {
 					let giveaway_info = Giveaway::<T>::get(giveaway).unwrap();
@@ -449,7 +452,7 @@ pub mod pallet {
 					Self::deposit_event(Event::<T>::Winner {
 						index: *giveaway,
 						who: giveaway_info.creator,
-						status: false
+						status: false,
 					});
 				}
 			}
