@@ -105,7 +105,7 @@ pub fn development_config(enable_manual_seal: Option<bool>) -> DevChainSpec {
 					// Initial PoA authorities
 					vec![authority_keys_from_seed("Alice")],
 					// Ethereum chain ID
-					SS58Prefix::get() as u64,
+					322 as u64,
 					vec![
 						get_account_id_from_seed::<sr25519::Public>("Alice"),
 					],
