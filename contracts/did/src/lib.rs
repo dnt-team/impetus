@@ -42,6 +42,4 @@ where
 		let provider: pallet_did::Provider = pallet_did::Provider::defensive_truncate_from(provider.as_bytes().to_vec());
 		Ok(pallet_did::Pallet::<Runtime>::external_id(user, provider).to_vec().into())
 	}
-
-
 }
