@@ -57,7 +57,7 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	pub type GiveawayName = BoundedVec<u8, ConstU32<128>>;
-	pub type RequestId = BoundedVec<u8, ConstU32<64>>;
+	pub type RequestId = BoundedVec<u8, ConstU32<128>>;
 	pub type RandomResult = U256;
 	pub type Results = BoundedVec<RandomResult, ConstU32<32>>;
 
@@ -397,6 +397,7 @@ pub mod pallet {
 					total < giveaways.max_join,
 					Error::<T>::TooManyParticipants
 				);
+				GiveawayToUser::<T>::insert(index, &who, true);
 				Participants::<T>::insert(index, total, &who);
 				TotalParticipantByGiveaway::<T>::mutate(index, |value| {
 					*value = value.saturating_add(1);
