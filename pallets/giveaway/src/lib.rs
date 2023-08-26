@@ -58,7 +58,8 @@ pub mod pallet {
 
 	pub type GiveawayName = BoundedVec<u8, ConstU32<128>>;
 	pub type RequestId = BoundedVec<u8, ConstU32<64>>;
-	pub type Results = BoundedVec<U256, ConstU32<32>>;
+	pub type RandomResult = U256;
+	pub type Results = BoundedVec<RandomResult, ConstU32<32>>;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -264,6 +265,8 @@ pub mod pallet {
 			index: u32,
 			who: T::AccountId,
 			status: bool,
+			request_id: RequestId,
+			result: RandomResult
 		},
 		Participated {
 			index: u32,
@@ -445,6 +448,8 @@ pub mod pallet {
 						index: *giveaway,
 						who: winner,
 						status: true,
+						request_id: request_id_bounded.clone(),
+						result: *result_bounded
 					});
 				} else {
 					let giveaway_info = Giveaway::<T>::get(giveaway).unwrap();
@@ -453,6 +458,8 @@ pub mod pallet {
 						index: *giveaway,
 						who: giveaway_info.creator,
 						status: false,
+						request_id: request_id_bounded.clone(),
+						result: *result_bounded
 					});
 				}
 			}
