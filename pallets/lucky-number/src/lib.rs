@@ -181,15 +181,15 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub(crate) type Round<T: Config> = StorageValue<_, u32, ValueQuery>;
+	pub type Round<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	/// The configuration for the current lottery.
 	#[pallet::storage]
-	pub(crate) type Lottery<T: Config> =
+	pub type Lottery<T: Config> =
 		StorageMap<_, Twox64Concat, u32, LotteryConfig<T::BlockNumber, BalanceOf<T>>>;
 
 	#[pallet::storage]
-	pub(crate) type Participants<T: Config> = StorageMap<
+	pub type Participants<T: Config> = StorageMap<
 		_,
 		Twox64Concat,
 		(u32, u8),
@@ -198,7 +198,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub(crate) type Winners<T: Config> = StorageMap<
+	pub type Winners<T: Config> = StorageMap<
 		_,
 		Twox64Concat,
 		(u32, u8),
@@ -208,7 +208,7 @@ pub mod pallet {
 
 	/// Total number of tickets sold.
 	#[pallet::storage]
-	pub(crate) type UserPredictionValue<T: Config> = StorageDoubleMap<
+	pub type UserPredictionValue<T: Config> = StorageDoubleMap<
 		_,
 		Twox64Concat,
 		u32,

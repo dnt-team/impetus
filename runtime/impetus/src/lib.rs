@@ -292,6 +292,19 @@ impl pallet_sudo::Config for Runtime {
 	type WeightInfo = pallet_sudo::weights::SubstrateWeight<Self>;
 }
 
+/// Configure the pallet-template in pallets/template.
+impl pallet_did::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ManagerOrigin = pallet_collective::EnsureMember<AccountId, ManagerCollective>;
+}
+
+impl pallet_utility::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type PalletsOrigin = OriginCaller;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
+
 impl pallet_evm_chain_id::Config for Runtime {}
 
 pub struct FindAuthorTruncated<F>(PhantomData<F>);

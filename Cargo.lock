@@ -3559,6 +3559,7 @@ dependencies = [
  "pallet-balances",
  "pallet-base-fee",
  "pallet-collective",
+ "pallet-did",
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
@@ -5408,6 +5409,22 @@ dependencies = [
 name = "pallet-collective"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.43#5e49f6e44820affccaf517fd22af564f4b495d40"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-did"
+version = "4.0.0-dev"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
