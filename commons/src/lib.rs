@@ -19,6 +19,5 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub mod pre_deploy_contracts;
-pub mod data_type;
 
 

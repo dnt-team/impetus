@@ -5,12 +5,13 @@
 
 use fp_evm::PrecompileHandle;
 use frame_support::{
-	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
+	dispatch::{GetDispatchInfo, PostDispatchInfo},
 	traits::Currency,
 };
 use pallet_evm::AddressMapping;
 use precompile_utils::prelude::*;
 use sp_core::{ConstU32, U256};
+use sp_runtime::traits::{Dispatchable, Hash, StaticLookup};
 use sp_std::{convert::TryInto, marker::PhantomData};
 use sp_std::vec::Vec;
 

@@ -94,7 +94,7 @@ pub mod pallet {
 		type Currency: ReservableCurrency<Self::AccountId>;
 
 		/// Something that provides randomness in the runtime.
-		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+		type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
 
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -186,7 +186,7 @@ pub mod pallet {
 	/// The configuration for the current lottery.
 	#[pallet::storage]
 	pub type Lottery<T: Config> =
-		StorageMap<_, Twox64Concat, u32, LotteryConfig<T::BlockNumber, BalanceOf<T>>>;
+		StorageMap<_, Twox64Concat, u32, LotteryConfig<BlockNumberFor<T>, BalanceOf<T>>>;
 
 	#[pallet::storage]
 	pub type Participants<T: Config> = StorageMap<
@@ -220,7 +220,7 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn on_initialize(n: T::BlockNumber) -> Weight {
+		fn on_initialize(n: BlockNumberFor<T>) -> Weight {
 			let round = Round::<T>::get();
 			let lottery = Lottery::<T>::get(round);
 			if let Some(config) = lottery {
@@ -333,8 +333,8 @@ pub mod pallet {
 		pub fn start_lottery(
 			origin: OriginFor<T>,
 			min_price: BalanceOf<T>,
-			length: T::BlockNumber,
-			delay: T::BlockNumber,
+			length: BlockNumberFor<T>,
+			delay: BlockNumberFor<T>,
 			rate: u8,
 			repeat: bool,
 		) -> DispatchResult {

@@ -43,9 +43,10 @@ pallet-transaction-payment = { workspace = true }
 pallet-transaction-payment-rpc-runtime-api = { workspace = true }
 
 # Frontier
-fp-evm = { workspace = true }
+fp-account = { workspace = true, features = ["serde"] }
+fp-evm = { workspace = true, features = ["serde"] }
 fp-rpc = { workspace = true }
-fp-self-contained = { workspace = true }
+fp-self-contained = { workspace = true, features = ["serde"] }
 # Frontier FRAME
 pallet-base-fee = { workspace = true }
 pallet-dynamic-fee = { workspace = true }
@@ -56,28 +57,6 @@ pallet-evm-precompile-modexp = { workspace = true }
 pallet-evm-precompile-sha3fips = { workspace = true }
 pallet-evm-precompile-simple = { workspace = true }
 pallet-hotfix-sufficients = { workspace = true }
-# Extra
-commons = { workspace = true }
-# pallet-assets = { workspace = true }
-pallet-collective = { workspace = true }
-pallet-insecure-randomness-collective-flip = { workspace = true }
-pallet-lucky-number = { workspace = true }
-pallet-did = { workspace = true }
-pallet-ocw-giveaway = { workspace = true }
-pallet-nfts = { workspace = true }
-pallet-assets = { workspace = true }
-pallet-uniques = { workspace = true }
-pallet-utility = { workspace = true }
-precompile-utils = { workspace = true }
-pallet-evm-precompile-batch = { workspace = true }
-pallet-evm-precompile-lucky-number = { workspace = true }
-pallet-evm-precompile-giveaway = { workspace = true }
-pallet-evm-precompile-did = { workspace = true }
-log = { workspace = true }
-
-[dev-dependencies]
-precompile-utils = { workspace = true, features = [ "std", "testing" ] }
-
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true, optional = true }
@@ -111,14 +90,13 @@ std = [
 	"frame-system-benchmarking?/std",
 	"pallet-aura/std",
 	"pallet-balances/std",
-	"pallet-did/std",
 	"pallet-grandpa/std",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
-	"pallet-utility/std",
 	"pallet-transaction-payment/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	# Frontier
+	"fp-account/std",
 	"fp-evm/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",
@@ -132,15 +110,6 @@ std = [
 	"pallet-evm-precompile-sha3fips/std",
 	"pallet-evm-precompile-simple/std",
 	"pallet-hotfix-sufficients/std",
-	#
-	"commons/std",
-	# "pallet-assets/std",
-	"pallet-collective/std",
-	"pallet-insecure-randomness-collective-flip/std",
-	"pallet-uniques/std",
-	"pallet-nfts/std",
-	"pallet-evm-precompile-batch/std",
-	"pallet-evm-precompile-lucky-number/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
@@ -149,6 +118,7 @@ runtime-benchmarks = [
 	"pallet-balances/runtime-benchmarks",
 	"pallet-grandpa/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
+	"pallet-sudo/runtime-benchmarks",
 	"pallet-ethereum/runtime-benchmarks",
 	"pallet-evm/runtime-benchmarks",
 	"pallet-hotfix-sufficients/runtime-benchmarks",

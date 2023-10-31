@@ -77,7 +77,7 @@ pub mod pallet {
 		/// The currency trait.
 		type Currency: ReservableCurrency<Self::AccountId>;
 		/// Something that provides randomness in the runtime.
-		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+		type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
 		#[pallet::constant]
 		type PotDeposit: Get<BalanceOf<Self>>;
 
@@ -231,7 +231,7 @@ pub mod pallet {
 		_,
 		Twox64Concat,
 		u32,
-		GiveawayConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>,
+		GiveawayConfig<BlockNumberFor<T>, BalanceOf<T>, T::AccountId>,
 	>;
 
 	#[pallet::storage]
@@ -248,12 +248,12 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn get_giveaways_by_block)]
 	pub type BlockToGiveaway<T: Config> =
-		StorageMap<_, Twox64Concat, T::BlockNumber, BoundedVec<u32, T::MaxSet>, ValueQuery>;
+		StorageMap<_, Twox64Concat, BlockNumberFor<T>, BoundedVec<u32, T::MaxSet>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_results_by_block)]
 	pub type BlockToResults<T: Config> =
-		StorageMap<_, Twox64Concat, T::BlockNumber, (RequestId, Results), OptionQuery>;
+		StorageMap<_, Twox64Concat, BlockNumberFor<T>, (RequestId, Results), OptionQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -273,7 +273,7 @@ pub mod pallet {
 			who: T::AccountId,
 		},
 		Results {
-			block: T::BlockNumber,
+			block: BlockNumberFor<T>,
 			results: (RequestId, Results),
 		},
 		RewardClaimed {
@@ -284,12 +284,12 @@ pub mod pallet {
 
 	// #[pallet::hooks]
 	// impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-	// fn offchain_worker(block_number: T::BlockNumber) {
+	// fn offchain_worker(block_number: BlockNumberFor<T>) {
 	// 	let signer = Signer::<T, T::AuthorityId>::all_accounts();
 	// 	// The entry point of your code called by offchain worker
 	// }
 
-	// fn on_initialize(n: T::BlockNumber) -> Weight {
+	// fn on_initialize(n: BlockNumberFor<T>) -> Weight {
 	// let giveaways = BlockToGiveaway::<T>::get(n);
 	// for giveaway_index in giveaways.iter() {
 	// 	let giveaway = Giveaway::<T>::get(giveaway_index);
@@ -316,8 +316,8 @@ pub mod pallet {
 		pub fn create_give_away(
 			origin: OriginFor<T>,
 			name: Vec<u8>,
-			start_block: T::BlockNumber,
-			end_block: T::BlockNumber,
+			start_block: BlockNumberFor<T>,
+			end_block: BlockNumberFor<T>,
 			kyc: KYCStatus,
 			random_type: RandomType,
 			asset_type: AssetType,
@@ -418,7 +418,7 @@ pub mod pallet {
 		#[pallet::weight((10_100, DispatchClass::Normal))]
 		pub fn set_block_result(
 			origin: OriginFor<T>,
-			block_number: T::BlockNumber,
+			block_number: BlockNumberFor<T>,
 			request_id: Vec<u8>,
 			result: Vec<U256>,
 		) -> DispatchResult {

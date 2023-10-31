@@ -8,7 +8,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 #[allow(unused_imports)]
 use sp_core::ecdsa;
-use sp_core::{ sr25519, storage::Storage, Pair, Public, H160, U256 };
+use sp_core::{ storage::Storage, Pair, Public, H160, U256 };
 use sp_runtime::traits::{ IdentifyAccount, Verify };
 use sp_state_machine::BasicExternalities;
 // Frontier
@@ -20,7 +20,6 @@ use impetus_runtime::{
 	SS58Prefix,
 	Signature,
 	WASM_BINARY,
-	ManagerCommitteeConfig,
 };
 use commons::pre_deploy_contracts::{ ERC1820_REGISTRY, MULTICALL2_BYTECODE, MULTICALL3_BYTECODE };
 
@@ -99,20 +98,21 @@ pub fn development_config(enable_manual_seal: Option<bool>) -> DevChainSpec {
 			DevGenesisExt {
 				genesis_config: testnet_genesis(
 					wasm_binary,
-					// Sudo account
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					// Sudo account (Alith)
+					AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")),
 					// Pre-funded accounts
 					vec![
-						get_account_id_from_seed::<sr25519::Public>("Alice"),
-						get_account_id_from_seed::<sr25519::Public>("Bob"),
-						get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-						get_account_id_from_seed::<sr25519::Public>("Bob//stash")
+						AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")), // Alith
+						AccountId::from(hex!("3Cd0A705a2DC65e5b1E1205896BaA2be8A07c6e0")), // Baltathar
+						AccountId::from(hex!("798d4Ba9baf0064Ec19eB4F0a1a45785ae9D6DFc")), // Charleth
+						AccountId::from(hex!("773539d4Ac0e786233D90A233654ccEE26a613D9")), // Dorothy
+						AccountId::from(hex!("Ff64d3F6efE2317EE2807d223a0Bdc4c0c49dfDB")), // Ethan
+						AccountId::from(hex!("C0F0f4ab324C46e55D02D0033343B4Be8A55532d")) // Faith
 					],
 					// Initial PoA authorities
 					vec![authority_keys_from_seed("Alice")],
 					// Ethereum chain ID
-					322 as u64,
-					vec![get_account_id_from_seed::<sr25519::Public>("Alice")]
+					SS58Prefix::get() as u64
 				),
 				enable_manual_seal,
 			}
@@ -145,26 +145,19 @@ pub fn local_testnet_config() -> ChainSpec {
 			testnet_genesis(
 				wasm_binary,
 				// Initial PoA authorities
-				// Sudo account
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Sudo account (Alith)
+				AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")),
 				// Pre-funded accounts
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash")
+					AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")), // Alith
+					AccountId::from(hex!("3Cd0A705a2DC65e5b1E1205896BaA2be8A07c6e0")), // Baltathar
+					AccountId::from(hex!("798d4Ba9baf0064Ec19eB4F0a1a45785ae9D6DFc")), // Charleth
+					AccountId::from(hex!("773539d4Ac0e786233D90A233654ccEE26a613D9")), // Dorothy
+					AccountId::from(hex!("Ff64d3F6efE2317EE2807d223a0Bdc4c0c49dfDB")), // Ethan
+					AccountId::from(hex!("C0F0f4ab324C46e55D02D0033343B4Be8A55532d")) // Faith
 				],
 				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
-				322,
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")]
+				42
 			)
 		},
 		// Bootnodes
@@ -188,8 +181,7 @@ fn testnet_genesis(
 	sudo_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
-	chain_id: u64,
-	did_managers: Vec<AccountId>
+	chain_id: u64
 ) -> RuntimeGenesisConfig {
 	use impetus_runtime::{
 		AuraConfig,
@@ -199,7 +191,6 @@ fn testnet_genesis(
 		GrandpaConfig,
 		SudoConfig,
 		SystemConfig,
-		DidConfig,
 	};
 
 	RuntimeGenesisConfig {
@@ -331,21 +322,8 @@ fn testnet_genesis(
 			},
 			..Default::default()
 		},
-		manager_committee: ManagerCommitteeConfig {
-			members: endowed_accounts
-				.iter()
-				.take((num_endowed_accounts + 1) / 2)
-				.cloned()
-				.collect(),
-			phantom: Default::default(),
-		},
 		ethereum: Default::default(),
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
-		assets: Default::default(),
-		did: DidConfig {
-			managers: did_managers.iter().cloned()
-			.collect(),
-		}
 	}
 }

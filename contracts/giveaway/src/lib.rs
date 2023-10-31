@@ -5,13 +5,14 @@
 
 use fp_evm::PrecompileHandle;
 use frame_support::{
-	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
+	dispatch::{GetDispatchInfo, PostDispatchInfo},
 	traits::Currency,
 };
 use pallet_evm::AddressMapping;
 use precompile_utils::prelude::*;
 use sp_core::{ConstU32, U256};
 use sp_std::{convert::TryInto, marker::PhantomData, vec::Vec};
+use sp_runtime::traits::{Dispatchable, Hash, StaticLookup};
 
 type BalanceOf<Runtime> = <<Runtime as pallet_ocw_giveaway::Config>::Currency as Currency<
 	<Runtime as frame_system::Config>::AccountId,
