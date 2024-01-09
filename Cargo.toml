@@ -153,7 +153,7 @@ derive_more = "0.99"
 sha3 = { version = "0.10", default-features = false }
 
 num_enum = { version = "0.5.3", default-features = false }
-paste = "1.0.6"
+paste = "1.0.14"
 slices = "0.2.0"
 
 precompile-utils = { git="https://github.com/dnt-team/impetus-frame", branch="polkadot-v1.1.0", default-features = false }
